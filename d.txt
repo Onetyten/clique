@@ -1,0 +1,26 @@
+📦clique
+ ┣ 📂api
+ ┣ 📂config
+ ┣ 📂controller
+ ┣ 📂logs
+ ┣ 📂middlewares
+ ┣ 📂public
+ ┃ ┣ 📂css
+ ┃ ┃ ┣ 📜output.css
+ ┃ ┃ ┗ 📜style.css
+ ┃ ┣ 📜main.ts
+ ┃ ┗ 📜test.html
+ ┣ 📂routes
+ ┣ 📂schema
+ ┣ 📂test
+ ┣ 📂views
+ ┃ ┣ 📂partials
+ ┃ ┃ ┗ 📜footer.ejs
+ ┃ ┣ 📜index.ejs
+ ┃ ┗ 📜room.ejs
+ ┣ 📜.env
+ ┣ 📜.gitignore
+ ┣ 📜app.ts
+ ┣ 📜package-lock.json
+ ┣ 📜package.json
+ ┗ 📜tsconfig.json
