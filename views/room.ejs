@@ -3,9 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Clique</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="/css/output.css">
 </head>
-<body>
-    <h2>Room</h2>
+<body class="bg-background-100 h-screen flex">
+
+    <%- include("./partials/sidebar.ejs") %>
+
+    <div class="hide-scrollbar min-h-screen flex-1 flex flex-col w-full">
+        <!-- <div class="h-screen w-full bg-user-3"></div>
+        <div class="h-screen w-full bg-user-4"></div> -->
+        <div class="w-full h-full flex flex-col justify-end gap-2 hide-scrollbar overflow-y-scroll p-6 ">
+            <div class="w-full flex gap-2 justify-start">
+                <div class="w-10 h-10 rounded-full flex justify-center items-center bg-user-1 text-white ">
+                    A
+                </div>
+                <p class="max-w-5/10 p-3 text-text-primary rounded-sm bg-background">
+                    Okay so, what's a weird food combo you've ever tried that was actually good?      
+                </p>
+            </div>
+
+            <div class="w-full flex gap-2 justify-start">
+                <div class="w-10 h-10 rounded-full flex justify-center items-center bg-user-2 text-white ">
+                    O
+                </div>
+                <p class="max-w-5/10 p-3 text-text-primary rounded-sm bg-background">
+                   Hmm... a burger with peanut butter on it. Don't judge, it was an accidental discovery at a diner.       
+                </p>
+            </div>
+
+            <div class="w-full flex gap-2 justify-end">
+                <!-- <div class="w-10 h-10 rounded-full flex justify-center items-center bg-user-2 text-white ">
+                    O
+                </div> -->
+                <p class="max-w-5/10 p-3 text-white rounded-sm bg-accent-blue">
+                    I'm sorry, did you say peanut butter? On a burger?! That's a new level of wild.         
+                </p>
+            </div>
+            <div class="w-full flex gap-2 justify-end">
+                <!-- <div class="w-10 h-10 rounded-full flex justify-center items-center bg-user-2 text-white ">
+                    O
+                </div> -->
+                <p class="max-w-5/10 p-3 text-white rounded-sm bg-accent-blue">
+                   Where's this diner brr   
+                </p>
+            </div>
+        </div>
+
+        <div class="bg-background-100 w-full flex flex-col gap-2 px-6">
+            <div class="left-8 top-3.5 flex items-center gap-3 text-2xl" >
+                <i class="fa-solid fa-comment text-accent-blue"></i>
+                <i class="fa-solid fa-microphone text-text-muted"></i>
+            </div>
+            <input placeholder="Type a message" type="text" class="bg-background-200 text-sm p-4 mb-6 focus:outline-0 focus:border-2 rounded-sm border-text-muted text-white placeholder:text-text-muted w-full h-14" >
+        </div>
+        
+    </div>
 </body>
 </html>

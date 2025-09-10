@@ -1,6 +1,14 @@
 @import "tailwindcss";
 @source "../views/**/*.{ejs,html,js}" "../public/**/*.{html,js}";
 
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 :root {
 --background-primary: #23272A;
 --background-secondary: #2C2F33;

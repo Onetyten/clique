@@ -4,6 +4,7 @@ import express, { urlencoded } from "express";
 import cors from 'cors'
 import path from 'path'
 import createRoomRoute from './routes/createRoom.route'
+import joinRoomRoute from './routes/joinRoom.route'
 
 const app = express()
 app.use(cors({origin:"*"}))
@@ -14,14 +15,15 @@ app.set("view engine","ejs")
 app.set("views",path.join(__dirname,"views"))
 
 app.get("/",(req,res)=>{
-    res.render("index",{ username:"Adetayo" })
+    res.render("index")
 })
 
 app.get("/room",(req,res)=>{
-    res.render("room",{ username:"Adetayo" })
+    res.render("room")
 })
 
 app.use('/room',createRoomRoute)
+app.use('/room',joinRoomRoute)
 
 
 const port = process.env.PORT 
