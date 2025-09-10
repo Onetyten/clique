@@ -265,6 +265,12 @@
   .min-h-screen {
     min-height: 100vh;
   }
+  .w-1 {
+    width: calc(var(--spacing) * 1);
+  }
+  .w-1\/2 {
+    width: calc(1/2 * 100%);
+  }
   .w-6 {
     width: calc(var(--spacing) * 6);
   }
@@ -367,6 +373,9 @@
   }
   .gap-6 {
     gap: calc(var(--spacing) * 6);
+  }
+  .overflow-scroll {
+    overflow: scroll;
   }
   .overflow-y-scroll {
     overflow-y: scroll;

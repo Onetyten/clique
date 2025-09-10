@@ -7,17 +7,23 @@
     <link rel="stylesheet" href="/css/output.css">
 </head>
 <body class="bg-background-100 min-h-screen flex justify-center items-center">
-    <form class="p-8 w-xl bg-background text-sm text-text-primary rounded-sm flex flex-col items-center gap-3">
+    <div class="p-8 w-xl bg-background text-sm text-text-primary rounded-sm flex flex-col items-center gap-3">
         <p class="text-5xl font-bold">Clique</p>
         <p class="">Join a Clique or start your own</p>
-        <input placeholder="# room number" type="text" class="bg-background-100 p-4 focus:outline-0 focus:border-2 rounded-sm border-text-muted placeholder:text-text-muted w-sm h-14" >
-        
-        <button class="p-3.5 w-52 bg-accent-blue hover:bg-accent-blue/80 text-white font-bold rounded-sm">
-            Join room
+
+        <input id="name-input" placeholder="Name" type="text" class="bg-background-100 p-4 focus:outline-0 focus:border-2 rounded-sm border-text-muted placeholder:text-text-muted w-sm h-14" >
+
+        <div class="flex w-sm gap-2">
+            <input id="room-index-input" placeholder="# room number" type="text" class="bg-background-100 w-1/2 p-4 focus:outline-0 focus:border-2 rounded-sm border-text-muted placeholder:text-text-muted h-14" >
+            <button id="join-btn" class="p-3.5 w-1/2 bg-accent-blue hover:bg-accent-blue/80 text-white font-bold rounded-sm">
+                Join Clique
+            </button>
+        </div>
+
+        <button id="create-btn" class="p-3.5 w-sm bg-accent-green hover:bg-accent-green/80 text-background font-bold rounded-sm">
+            Create Clique
         </button>
-        <button class="p-3.5 w-52 bg-accent-green hover:bg-accent-green/80 text-background font-bold rounded-sm">
-            Create room
-        </button>
-    </form>
+        <script src="/ts/login.js"></script>
+    </div>
 </body>
 </html>
