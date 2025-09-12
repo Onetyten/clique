@@ -9,6 +9,7 @@
   scrollbar-width: none;
 }
 
+
 :root {
 --background-primary: #23272A;
 --background-secondary: #2C2F33;
@@ -45,4 +46,13 @@
   --color-user-8: #b366ff;
   --color-user-9: #e6e6fa;
   --color-user-10: #a98d6c;
+}
+
+.toast-info {
+    background-color: #5865F2 !important;
+    color: #FFFFFF !important;
+}
+.toast-success {
+    background-color: #57F287 !important;
+    color: #FFFFFF !important;
 }

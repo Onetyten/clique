@@ -1,10 +1,15 @@
 import dotenv from 'dotenv'
 dotenv.config()
-import express, { urlencoded } from "express";
+import express, { Request, Response, urlencoded } from "express";
 import cors from 'cors'
 import path from 'path'
-import createRoomRoute from './routes/createRoom.route'
-import joinRoomRoute from './routes/joinRoom.route'
+import http from 'http'
+import { Server, Socket } from 'socket.io';
+import { handleCreateClique } from './handlers/createClique.handler';
+import { handleJoinClique } from './handlers/joinClique.handler';
+import fetchGuestRoute from './routes/guest/fetchGuests.route'
+
+
 
 const app = express()
 app.use(cors({origin:"*"}))
@@ -18,18 +23,36 @@ app.get("/",(req,res)=>{
     res.render("index")
 })
 
-app.get("/room",(req,res)=>{
-    res.render("room")
+app.get("/room",(req:Request,res:Response)=>{
+    const roomIndex = req.query.index
+    if (!roomIndex){
+        return res.status(400).send("Room index is missing.")
+    }
+    res.render("room",{roomIndex:roomIndex})
 })
 
-app.use('/room',createRoomRoute)
-app.use('/room',joinRoomRoute)
-
+app.use('/room',fetchGuestRoute)
 
 const port = process.env.PORT 
 
-app.listen(port,()=>{
-    console.log("clique is up and running")
+const server = http.createServer(app)
+
+const io = new Server(server,{
+    cors:{
+        origin:"*"
+    },
 })
 
+io.on("connection",(socket:Socket)=>{
+    console.log("A user connected",socket.id)
+    socket.on("CreateClique",(data)=>handleCreateClique(socket,data))
+    socket.on("joinClique",(data)=>handleJoinClique(socket,data))
 
+    socket.on("disconnect",()=>{
+        console.log("User disconnected:", socket.id)
+    })
+})
+
+server.listen(port,()=>{
+    console.log("clique is up and running")
+})

@@ -3,17 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clique</title>
+    <title>Clique <%=roomIndex%></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="/css/output.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 </head>
 <body class="bg-background-100 h-screen flex">
 
     <%- include("./partials/sidebar.ejs") %>
 
     <div class="hide-scrollbar min-h-screen flex-1 flex flex-col w-full">
-        <!-- <div class="h-screen w-full bg-user-3"></div>
-        <div class="h-screen w-full bg-user-4"></div> -->
         <div class="w-full h-full flex flex-col justify-end gap-2 hide-scrollbar overflow-y-scroll p-6 ">
             <div class="w-full flex gap-2 justify-start">
                 <div class="w-10 h-10 rounded-full flex justify-center items-center bg-user-1 text-white ">
@@ -34,17 +33,13 @@
             </div>
 
             <div class="w-full flex gap-2 justify-end">
-                <!-- <div class="w-10 h-10 rounded-full flex justify-center items-center bg-user-2 text-white ">
-                    O
-                </div> -->
+
                 <p class="max-w-5/10 p-3 text-white rounded-sm bg-accent-blue">
                     I'm sorry, did you say peanut butter? On a burger?! That's a new level of wild.         
                 </p>
             </div>
             <div class="w-full flex gap-2 justify-end">
-                <!-- <div class="w-10 h-10 rounded-full flex justify-center items-center bg-user-2 text-white ">
-                    O
-                </div> -->
+
                 <p class="max-w-5/10 p-3 text-white rounded-sm bg-accent-blue">
                    Where's this diner brr   
                 </p>
@@ -52,13 +47,51 @@
         </div>
 
         <div class="bg-background-100 w-full flex flex-col gap-2 px-6">
-            <div class="left-8 top-3.5 flex items-center gap-3 text-2xl" >
-                <i class="fa-solid fa-comment text-accent-blue"></i>
-                <i class="fa-solid fa-microphone text-text-muted"></i>
+            <div class="left-8 top-3.5 flex items-center justify-between gap-4 text-2xl" >
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2 cursor-pointer text-accent-blue">
+                        <!-- <i class="fa-solid fa-comment"></i> -->
+                        <p class="text-xs">Chat mode</p>
+                    </div>
+                    <div class="flex items-center gap-2 cursor-pointer text-text-muted">
+                        <!-- <i class="fa-solid fa-microphone"></i> -->
+                        <p class="text-xs">Answer mode</p>
+                    </div>
+                </div>
+
+                <div id="question-Button" class="text-accent-blue items-center gap-2 hidden cursor-pointer">
+                    <p class="text-xs">New question</p>
+                    <i class="fa-solid fa-bolt"></i>     
+                </div>
+               
             </div>
-            <input placeholder="Type a message" type="text" class="bg-background-200 text-sm p-4 mb-6 focus:outline-0 focus:border-2 rounded-sm border-text-muted text-white placeholder:text-text-muted w-full h-14" >
+            <form id="message-form" class="w-full mb-6 relative" action="">
+                <input placeholder="Type a message" type="text" id="message-input" class="bg-background-200 text-sm p-4  focus:outline-0 focus:border-2 rounded-sm border-text-muted text-white placeholder:text-text-muted w-full h-14" >
+                <button type="submit" class="absolute right-3 text-accent-blue text-2xl top-1/2 -translate-y-1/2">
+                    <i class="fa-solid fa-comment"></i>
+                </button>
+            </form>
+
         </div>
-        
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+        <script>
+            toastr.options = {
+                "positionClass": "toast-top-center",
+                "showDuration": "300",
+                "hideDuration": "1000",
+                "timeOut": "5000",
+                "extendedTimeOut": "1000",
+                "closeButton": true,
+                "progressBar": true, 
+                "preventDuplicates": true,
+            };
+        </script>
+        <script src="/socket.io/socket.io.js"></script>
+
+       
+        <script type="module" src="/js/cliqueManager.js"></script>
     </div>
 </body>
 </html>
