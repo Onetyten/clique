@@ -2,3 +2,26 @@ export interface JoinedUserTypes{
     username:string,
     index: number
 }
+
+export interface UserType {
+  id: string;
+  name: string;
+  role: number;
+  room_id: string;
+  color_id: number;
+  joined_at: string;
+}
+
+export interface RoomType {
+  id: string;
+  clique_key: string;
+  name: string;
+  created_at: string;
+}
+
+export interface ChatType {
+  user: UserType; 
+  message: string;
+  color:string;
+  timeStamp: number;
+}

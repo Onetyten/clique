@@ -12,68 +12,15 @@
 
     <%- include("./partials/sidebar.ejs") %>
 
-    <div class="hide-scrollbar min-h-screen flex-1 flex flex-col w-full">
-        <div class="w-full h-full flex flex-col justify-end gap-2 hide-scrollbar overflow-y-scroll p-6 ">
-            <div class="w-full flex gap-2 justify-start">
-                <div class="w-10 h-10 rounded-full flex justify-center items-center bg-user-1 text-white ">
-                    A
-                </div>
-                <p class="max-w-5/10 p-3 text-text-primary rounded-sm bg-background">
-                    Okay so, what's a weird food combo you've ever tried that was actually good?      
-                </p>
-            </div>
-
-            <div class="w-full flex gap-2 justify-start">
-                <div class="w-10 h-10 rounded-full flex justify-center items-center bg-user-2 text-white ">
-                    O
-                </div>
-                <p class="max-w-5/10 p-3 text-text-primary rounded-sm bg-background">
-                   Hmm... a burger with peanut butter on it. Don't judge, it was an accidental discovery at a diner.       
-                </p>
-            </div>
-
-            <div class="w-full flex gap-2 justify-end">
-
-                <p class="max-w-5/10 p-3 text-white rounded-sm bg-accent-blue">
-                    I'm sorry, did you say peanut butter? On a burger?! That's a new level of wild.         
-                </p>
-            </div>
-            <div class="w-full flex gap-2 justify-end">
-
-                <p class="max-w-5/10 p-3 text-white rounded-sm bg-accent-blue">
-                   Where's this diner brr   
-                </p>
-            </div>
+    <div class="hide-scrollbar relative min-h-screen flex-1 flex flex-col w-full">
+        <%- include("./partials/questionDisplay.ejs") %>
+        <div id="chatContainer" class="flex-1 w-full overflow-y-auto hide-scrollbar p-6 space-y-2">
+            
         </div>
 
-        <div class="bg-background-100 w-full flex flex-col gap-2 px-6">
-            <div class="left-8 top-3.5 flex items-center justify-between gap-4 text-2xl" >
-                <div class="flex items-center gap-4">
-                    <div class="flex items-center gap-2 cursor-pointer text-accent-blue">
-                        <!-- <i class="fa-solid fa-comment"></i> -->
-                        <p class="text-xs">Chat mode</p>
-                    </div>
-                    <div class="flex items-center gap-2 cursor-pointer text-text-muted">
-                        <!-- <i class="fa-solid fa-microphone"></i> -->
-                        <p class="text-xs">Answer mode</p>
-                    </div>
-                </div>
-
-                <div id="question-Button" class="text-accent-blue items-center gap-2 hidden cursor-pointer">
-                    <p class="text-xs">New question</p>
-                    <i class="fa-solid fa-bolt"></i>     
-                </div>
-               
-            </div>
-            <form id="message-form" class="w-full mb-6 relative" action="">
-                <input placeholder="Type a message" type="text" id="message-input" class="bg-background-200 text-sm p-4  focus:outline-0 focus:border-2 rounded-sm border-text-muted text-white placeholder:text-text-muted w-full h-14" >
-                <button type="submit" class="absolute right-3 text-accent-blue text-2xl top-1/2 -translate-y-1/2">
-                    <i class="fa-solid fa-comment"></i>
-                </button>
-            </form>
-
-        </div>
-
+        <%- include("./partials/questionForm.ejs")  %>
+        <%- include("./partials/messageInput.ejs")  %>
+        
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
         <script>
@@ -89,8 +36,6 @@
             };
         </script>
         <script src="/socket.io/socket.io.js"></script>
-
-       
         <script type="module" src="/js/cliqueManager.js"></script>
     </div>
 </body>

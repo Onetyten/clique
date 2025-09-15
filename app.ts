@@ -8,6 +8,8 @@ import { Server, Socket } from 'socket.io';
 import { handleCreateClique } from './handlers/createClique.handler';
 import { handleJoinClique } from './handlers/joinClique.handler';
 import fetchGuestRoute from './routes/guest/fetchGuests.route'
+import { handleChatMessage } from './handlers/chatMessage.handler';
+import { handleAskQuestion } from './handlers/AskQuestion.handler';
 
 
 
@@ -47,7 +49,9 @@ io.on("connection",(socket:Socket)=>{
     console.log("A user connected",socket.id)
     socket.on("CreateClique",(data)=>handleCreateClique(socket,data))
     socket.on("joinClique",(data)=>handleJoinClique(socket,data))
-
+    socket.on("ChatMessage",(data)=>handleChatMessage(socket,data))
+    socket.on("askQuestion",(data)=>handleAskQuestion(socket,data))
+    
     socket.on("disconnect",()=>{
         console.log("User disconnected:", socket.id)
     })
