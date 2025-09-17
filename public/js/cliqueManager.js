@@ -28,6 +28,7 @@ let inSession = false;
 let isAnswerMode = false;
 const questionModeBtn = document.getElementById("questionmode-btn");
 const answerModeBtn = document.getElementById("answermode-btn");
+const messageLoader = document.getElementById("message-loader")
 let questionInterval;
 let currentQuestion;
 let currentAnswer;
@@ -176,11 +177,17 @@ messageForm.addEventListener("submit",(e)=>{
     }
     else{
         socket.emit("ChatMessage", payload);
-        renderMessage(payload)
+        messageLoader.classList.remove("hidden")
+        messageLoader.classList.add("flex")
     }
     messageInput.value = ""
 })
 
+socket.on("messageSuccess",(data)=>{
+    messageLoader.classList.add("hidden")
+    messageLoader.classList.remove("flex")
+    renderMessage(data)
+})
 
 socket.on("messageSent",(data)=>{
     renderMessage(data)
