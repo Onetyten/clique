@@ -12,6 +12,7 @@ import { handleChatMessage } from './handlers/chatMessage.handler';
 import { handleAskQuestion } from './handlers/AskQuestion.handler';
 import { CorrectAnswerMessage } from './handlers/correctAnswer.handler';
 import { WrongAnswerMessage } from './handlers/incorrectAnswer.handler';
+import { CacheRoleIDs } from './cache/cacheRoleID';
 
 
 
@@ -22,6 +23,8 @@ app.use(express.urlencoded({extended:true}))
 app.use(express.static(path.join(__dirname,"public")))
 app.set("view engine","ejs")
 app.set("views",path.join(__dirname,"views"))
+
+CacheRoleIDs()
 
 app.get("/",(req,res)=>{
     res.render("index")

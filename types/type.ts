@@ -6,7 +6,7 @@ export interface JoinedUserTypes{
 export interface UserType {
   id: string;
   name: string;
-  role: number;
+  role: string;
   room_id: string;
   color_id: number;
   joined_at: string;

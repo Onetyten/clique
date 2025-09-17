@@ -36,12 +36,11 @@ let currentEndTime;
 let triesLeft = 3;
 
 
-
+// general setup
 let isCollapsed = false;
 const room = JSON.parse(sessionStorage.getItem("room"));
 const user = JSON.parse(sessionStorage.getItem("user"))
 const color = JSON.parse(sessionStorage.getItem("color"))
-
 
 window.addEventListener('DOMContentLoaded',async()=>{ 
     const room = JSON.parse(sessionStorage.getItem("room"))
@@ -78,6 +77,8 @@ window.addEventListener('DOMContentLoaded',async()=>{
     }
 })
 
+
+
 function renderSidebarMembers(){
     memberContainer.innerHTML = ""
     memberList.forEach((member) => {
@@ -100,24 +101,6 @@ function renderSidebarMembers(){
         memberContainer.insertAdjacentHTML("beforeend", memberEl)
     })
 }
-
-
-socket.on("userJoined", (data) => {
-    toastr.info(data.message);
-    console.log(`${data.newUser.name} joined the room`);
-    const alreadyInList = memberList.some(m=>m.id === data.newUser.id)
-    if (alreadyInList) return
-    memberList.push({ id: data.newUser.id, name: data.newUser.name, role: data.newUser.role || 1,color_hex:data.colorHex.hexcode || '#57A8A8' }); 
-    renderSidebarMembers();
-});
-
-socket.on("Error", (data) => {
-    toastr.warning(data.message || "Please check your inputs");
-})
-socket.on("questionError", (data) => {
-    questionFormCleanup()
-    toastr.warning(data.message);
-})
 
 toggleSidebar.addEventListener("click", () => {
     isCollapsed = !isCollapsed;
@@ -155,6 +138,35 @@ toggleSidebar.addEventListener("click", () => {
 });
 
 
+socket.on("userJoined", (data) => {
+    toastr.info(data.message);
+    console.log(`${data.newUser.name} joined the room`);
+    const alreadyInList = memberList.some(m=>m.id === data.newUser.id)
+    if (alreadyInList) return
+    memberList.push({ id: data.newUser.id, name: data.newUser.name, role: data.newUser.role || 1,color_hex:data.colorHex.hexcode || '#57A8A8' }); 
+    renderSidebarMembers();
+});
+
+socket.on("Error", (data) => {
+    toastr.warning(data.message || "Please check your inputs");
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// chat related
 messageForm.addEventListener("submit",(e)=>{
     e.preventDefault()
     const message = messageInput.value
@@ -192,16 +204,6 @@ socket.on("messageSuccess",(data)=>{
 socket.on("messageSent",(data)=>{
     renderMessage(data)
 })
-
-socket.on("questionAnsweredWrong",(data)=>{
-     renderIncorrectMessage(data)
-})
-
-socket.on("questionAnsweredCorrectly",(data)=>{
-     renderCorrectMessage(data)
-})
-
-
 function renderMessage({ user: sender, message, color }) {
     const isMe = sender.id === user.id;
     let messageEl;
@@ -228,6 +230,137 @@ function renderMessage({ user: sender, message, color }) {
     chatContainer.insertAdjacentHTML("beforeend", messageEl);
     chatContainer.scrollTop = chatContainer.scrollHeight;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//question related
+askBtn.addEventListener("click",()=>{
+    if (questionDisabled==true) return toastr.warning("You cannot ask another question until this session is over")
+    if (user.role !== 2) return toastr.warning("Only game masters can ask questions wait your turn")
+    const question = questionInput.value
+    const answer = answerInput.value
+    if (question.trim().length ==0) return toastr.warning("Please provide a question")
+    if (answer.trim().length ==0) return toastr.warning("Please provide an answer to this question")
+    if (question.length >256) return toastr.warning("Question must be less than 256 characters")
+    if (answer.length >32) return toastr.warning("Answer must be less than 32 characters")
+    const payload = {question,answer,user, endTime: Date.now()+ 60*1000}
+    socket.emit("askQuestion",payload)
+    askBtn.disabled = true
+    askBtn.classList.remove("bg-accent-green")
+    askBtn.classList.add("bg-text-muted")
+    questionLoadingDots.classList.remove("hidden")
+    questionLoadingDots.classList.add("flex")
+})
+
+QuestionBtn.addEventListener("click",()=>{
+if (questionDisabled==true) return toastr.warning("You cannot ask another question until this session is over")
+    questionContainer.classList.remove("hidden")
+    questionContainer.classList.add("flex")
+})
+
+questionCancelBtn.addEventListener("click",()=>{
+    questionContainer.classList.remove("flex")
+    questionContainer.classList.add("hidden")
+})
+
+
+function HandleQuestionAsked(data){
+    currentQuestion = data.question
+    currentAnswer = data.answer
+    inSession = true
+    countdownContainer.classList.remove("text-error")
+    countdownContainer.classList.add("text-accent-green")
+    gameQuestionCtn.classList.remove("hidden")
+    gameQuestionCtn.classList.add("flex")
+    gameQuestionEl.textContent = data.question
+    questionInterval = setInterval(()=>{
+        const timeLeft = data.endTime - Date.now()
+        if (timeLeft<=0) return questionTimedOut(data)
+        if (timeLeft<30000 && timeLeft>10000){
+            countdownContainer.classList.remove("text-accent-green")
+            countdownContainer.classList.add("text-warning")
+        }
+        else if(timeLeft<10000){
+            countdownContainer.classList.remove("text-warning")
+            countdownContainer.classList.add("text-error")
+        }
+        countdownEl.textContent = (timeLeft/1000).toFixed(0)
+    },1000)
+}
+
+function questionFormCleanup(){
+    askBtn.disabled = false
+    askBtn.classList.add("bg-accent-green")
+    askBtn.classList.remove("bg-text-muted")
+    questionLoadingDots.classList.add("hidden")
+    questionLoadingDots.classList.remove("flex")
+}
+
+socket.on("questionSuccess",(data)=>{
+    questionFormCleanup()
+    if (user.role != 2) return
+    console.log("question asked")
+    questionContainer.classList.remove("flex")
+    questionContainer.classList.add("hidden")
+    questionDisabled = true
+    sessionStorage.setItem('questionDisabled',JSON.stringify(questionDisabled))
+    QuestionBtn.classList.remove("text-accent-blue")
+    QuestionBtn.classList.add("text-text-muted")
+    HandleQuestionAsked(data)
+})
+
+socket.on("questionAsked",(data)=>{
+    HandleQuestionAsked(data)
+})
+
+socket.on("questionError", (data) => {
+    questionFormCleanup()
+    toastr.warning(data.message);
+})
+
+
+questionModeBtn.addEventListener("click",()=>{
+    if (isAnswerMode == false) return
+    isAnswerMode = false
+    questionModeBtn.classList.add("text-accent-blue")
+    questionModeBtn.classList.remove("text-text-muted")
+    answerModeBtn.classList.remove("text-accent-blue")
+    answerModeBtn.classList.add("text-text-muted")
+    toastr.success("switched to question mode")
+})
+
+answerModeBtn.addEventListener("click",()=>{
+    if (isAnswerMode == true) return
+    if (user.role == 2) return toastr.info("Game masters cannot answer questions")
+    if (!inSession) return toastr.info("You can only switch to answer mode during a game session.")
+    isAnswerMode = true
+    questionModeBtn.classList.remove("text-accent-blue")
+    questionModeBtn.classList.add("text-text-muted")
+    answerModeBtn.classList.add("text-accent-blue")
+    answerModeBtn.classList.remove("text-text-muted")
+    toastr.success("switched to answer mode")
+})
+
+socket.on("questionAnsweredWrong",(data)=>{
+     renderIncorrectMessage(data)
+})
+
+socket.on("questionAnsweredCorrectly",(data)=>{
+     renderCorrectMessage(data)
+})
 
 function renderCorrectMessage({ user: sender, message, color }) {
     const isMe = sender.id === user.id;
@@ -283,41 +416,6 @@ function renderIncorrectMessage({ user: sender, message, color }) {
     chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
-QuestionBtn.addEventListener("click",()=>{
-if (questionDisabled==true) return toastr.warning("You cannot ask another question until this session is over")
-    questionContainer.classList.remove("hidden")
-    questionContainer.classList.add("flex")
-})
-
-questionCancelBtn.addEventListener("click",()=>{
-    questionContainer.classList.remove("flex")
-    questionContainer.classList.add("hidden")
-})
-
-function HandleQuestionAsked(data){
-    currentQuestion = data.question
-    currentAnswer = data.answer
-    inSession = true
-    countdownContainer.classList.remove("text-error")
-    countdownContainer.classList.add("text-accent-green")
-    gameQuestionCtn.classList.remove("hidden")
-    gameQuestionCtn.classList.add("flex")
-    gameQuestionEl.textContent = data.question
-    questionInterval = setInterval(()=>{
-        const timeLeft = data.endTime - Date.now()
-        if (timeLeft<=0) return questionTimedOut(data)
-        if (timeLeft<30000 && timeLeft>10000){
-            countdownContainer.classList.remove("text-accent-green")
-            countdownContainer.classList.add("text-warning")
-        }
-        else if(timeLeft<10000){
-            countdownContainer.classList.remove("text-warning")
-            countdownContainer.classList.add("text-error")
-        }
-        countdownEl.textContent = (timeLeft/1000).toFixed(0)
-    },1000)
-}
-
 function questionTimedOut(data) {
     clearInterval(questionInterval)
     inSession = false
@@ -336,67 +434,5 @@ function questionTimedOut(data) {
     },5000)
 }
 
-askBtn.addEventListener("click",()=>{
-    if (questionDisabled==true) return toastr.warning("You cannot ask another question until this session is over")
-    if (user.role !== 2) return toastr.warning("Only game masters can ask questions wait your turn")
-    const question = questionInput.value
-    const answer = answerInput.value
-    if (question.trim().length ==0) return toastr.warning("Please provide a question")
-    if (answer.trim().length ==0) return toastr.warning("Please provide an answer to this question")
-    if (question.length >256) return toastr.warning("Question must be less than 256 characters")
-    if (answer.length >32) return toastr.warning("Answer must be less than 32 characters")
-    const payload = {question,answer,user, endTime: Date.now()+ 60*1000}
-    socket.emit("askQuestion",payload)
-    askBtn.disabled = true
-    askBtn.classList.remove("bg-accent-green")
-    askBtn.classList.add("bg-text-muted")
-    questionLoadingDots.classList.remove("hidden")
-    questionLoadingDots.classList.add("flex")
-})
 
-function questionFormCleanup(){
-    askBtn.disabled = false
-    askBtn.classList.add("bg-accent-green")
-    askBtn.classList.remove("bg-text-muted")
-    questionLoadingDots.classList.add("hidden")
-    questionLoadingDots.classList.remove("flex")
-}
 
-socket.on("questionSuccess",(data)=>{
-    questionFormCleanup()
-    if (user.role != 2) return
-    console.log("question asked")
-    questionContainer.classList.remove("flex")
-    questionContainer.classList.add("hidden")
-    questionDisabled = true
-    sessionStorage.setItem('questionDisabled',JSON.stringify(questionDisabled))
-    QuestionBtn.classList.remove("text-accent-blue")
-    QuestionBtn.classList.add("text-text-muted")
-    HandleQuestionAsked(data)
-})
-
-socket.on("questionAsked",(data)=>{
-    HandleQuestionAsked(data)
-})
-
-questionModeBtn.addEventListener("click",()=>{
-    if (isAnswerMode == false) return
-    isAnswerMode = false
-    questionModeBtn.classList.add("text-accent-blue")
-    questionModeBtn.classList.remove("text-text-muted")
-    answerModeBtn.classList.remove("text-accent-blue")
-    answerModeBtn.classList.add("text-text-muted")
-    toastr.success("switched to question mode")
-})
-
-answerModeBtn.addEventListener("click",()=>{
-    if (isAnswerMode == true) return
-    if (user.role == 2) return toastr.info("Game masters cannot answer questions")
-    if (!inSession) return toastr.info("You can only switch to answer mode during a game session.")
-    isAnswerMode = true
-    questionModeBtn.classList.remove("text-accent-blue")
-    questionModeBtn.classList.add("text-text-muted")
-    answerModeBtn.classList.add("text-accent-blue")
-    answerModeBtn.classList.remove("text-text-muted")
-    toastr.success("switched to answer mode")
-})
