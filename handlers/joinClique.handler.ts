@@ -35,6 +35,11 @@ export async function handleJoinClique(socket:Socket,{cliqueKey,username,isFirst
                 if (nameExists.rows.length>0){
                 console.log(`sorry, user ${name} already exists in this clique, please choose another name`);
                 return socket.emit("Error", { message: `user ${name} already exists in this clique choose another name` })}
+                const isSessionActive = await pool.query('SELECT is_active,end_time FROM sessions WHERE room_id=$1 AND is_active IS true',[roomId])
+                if (isSessionActive.rows.length>0){
+                    const timeLeft = (isSessionActive.rows[0].end_time - Date.now())/1000
+                    return socket.emit("midSessionError", { message: `A session is currently going on in room ${roomName}, rejoin in ${timeLeft}s`, timeLeft})
+                }
                 const guestRoleResult= await pool.query('SELECT id FROM roles WHERE name=$1',['guest']);
                 if (guestRoleResult.rows.length === 0) {
                     throw new Error("Guest role not found in roles table");

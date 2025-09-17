@@ -10,6 +10,8 @@ import { handleJoinClique } from './handlers/joinClique.handler';
 import fetchGuestRoute from './routes/guest/fetchGuests.route'
 import { handleChatMessage } from './handlers/chatMessage.handler';
 import { handleAskQuestion } from './handlers/AskQuestion.handler';
+import { CorrectAnswerMessage } from './handlers/correctAnswer.handler';
+import { WrongAnswerMessage } from './handlers/incorrectAnswer.handler';
 
 
 
@@ -50,6 +52,8 @@ io.on("connection",(socket:Socket)=>{
     socket.on("CreateClique",(data)=>handleCreateClique(socket,data))
     socket.on("joinClique",(data)=>handleJoinClique(socket,data))
     socket.on("ChatMessage",(data)=>handleChatMessage(socket,data))
+    socket.on("answeredCorrectly",(data)=>CorrectAnswerMessage(socket,data))
+    socket.on("answeredIncorrectly",(data)=>WrongAnswerMessage(socket,data))
     socket.on("askQuestion",(data)=>handleAskQuestion(socket,data))
     
     socket.on("disconnect",()=>{

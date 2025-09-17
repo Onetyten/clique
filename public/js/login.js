@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 const socket = io();
 const nameInput = document.getElementById("name-input")
 const cliqueInput = document.getElementById("clique-name-input")
@@ -47,6 +48,14 @@ socket.on("CliqueCreated", (data) => {
 socket.on("Error", (data) => {
     cleanUp()
     toastr.warning(data.message || "Please check your inputs");
+});
+
+socket.on("midSessionError", (data) => {
+    cleanUp()
+    toastr.warning(data.message || "A session is currently going on in the clique");
+    setTimeout(()=>{
+        toastr.success("Previous game session is over, you can join clique now")
+    },data.timeLeft*1000)
 });
 
 

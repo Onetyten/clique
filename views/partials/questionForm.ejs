@@ -6,8 +6,13 @@
 
             <input id="answer-input" placeholder="Answer" type="text" class="bg-background-100 p-4 focus:outline-0 focus:border-2 rounded-sm border-text-muted placeholder:text-text-muted w-sm h-14" >
             <div class="flex items-center w-full gap-2">
-                <button id="ask-btn" class="p-3.5 w-full disabled:bg-text-muted bg-accent-green hover:bg-accent-green/80 text-background font-bold rounded-sm">
+                <button id="ask-btn" class="p-3.5 w-full flex justify-center items-center relative disabled:bg-text-muted bg-accent-green hover:bg-accent-green/80 text-background font-bold rounded-sm">
                     Ask
+                    <div id="question-loading-dots" class="w-full h-full bg-background/30 hidden top-0 left-0 absolute justify-center items-center gap-2">
+                        <div class="dot w-3 h-3 rounded-full bg-white"></div>
+                        <div class="dot w-3 h-3 rounded-full bg-white"></div>
+                        <div class="dot w-3 h-3 rounded-full bg-white"></div>
+                    </div>
                 </button>
                 <button id="question-cancel-btn" class="p-3.5 w-full disabled:bg-text-muted bg-red-500 hover:bg-red-500/80 text-background font-bold rounded-sm">
                     Cancel
