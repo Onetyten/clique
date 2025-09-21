@@ -30,22 +30,17 @@ const questionModeBtn = document.getElementById("questionmode-btn");
 const answerModeBtn = document.getElementById("answermode-btn");
 const messageLoader = document.getElementById("message-loader")
 let questionInterval;
-let currentQuestion;
-let currentAnswer;
 let currentEndTime;
 let triesLeft = 3;
-
-
 // general setup
 let isCollapsed = false;
 const room = JSON.parse(sessionStorage.getItem("room"));
 const user = JSON.parse(sessionStorage.getItem("user"))
 const color = JSON.parse(sessionStorage.getItem("color"))
+let currentSession = JSON.parse(sessionStorage.getItem("currentSession"))
+
 
 window.addEventListener('DOMContentLoaded',async()=>{ 
-    const room = JSON.parse(sessionStorage.getItem("room"))
-    const user = JSON.parse(sessionStorage.getItem("user"))
-    const roomName = room.name
     console.log(roomName)
     if (room && user) {
         socket.emit("joinClique", {cliqueKey: room.clique_key,
@@ -57,8 +52,12 @@ window.addEventListener('DOMContentLoaded',async()=>{
         document.getElementById("question-Button").classList.remove("hidden");
         document.getElementById("question-Button").classList.add("flex");
     }
+    getMemberList()
+})
+
+async function getMemberList () {
     try {
-        const response = await fetch(`/room/guests/fetch/${encodeURIComponent(roomName)}`)
+        const response = await fetch(`/room/guests/fetch/${encodeURIComponent(room.name)}`)
         const data = await response.json()
         if (!response.ok){
             console.log(data.message)
@@ -67,6 +66,22 @@ window.addEventListener('DOMContentLoaded',async()=>{
         console.log(data.members)
         if (data.members.length>0){
             memberList = data.members
+            const getUserFromMember = data.members.filter(data=>data.id == user.id)[0]
+            if (getUserFromMember.role == 1){
+                document.getElementById("question-Button").classList.add("hidden");
+                document.getElementById("question-Button").classList.remove("flex");
+                answerModeBtn.classList.remove("hidden")
+                answerModeBtn.classList.add("flex")
+                user.role = 1
+            }
+            else {
+                document.getElementById("question-Button").classList.remove("hidden");
+                document.getElementById("question-Button").classList.add("flex");
+                answerModeBtn.classList.add("hidden")
+                answerModeBtn.classList.remove("flex")
+                user.role = 2
+            }
+            sessionStorage.setItem('user', JSON.stringify(user));
             renderSidebarMembers()
         }
         return
@@ -75,9 +90,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
         console.log('error fetching members',error)
         return toastr.error('error fetching members')
     }
-})
-
-
+}
 
 function renderSidebarMembers(){
     memberContainer.innerHTML = ""
@@ -140,11 +153,11 @@ toggleSidebar.addEventListener("click", () => {
 
 socket.on("userJoined", (data) => {
     toastr.info(data.message);
-    console.log(`${data.newUser.name} joined the room`);
-    const alreadyInList = memberList.some(m=>m.id === data.newUser.id)
-    if (alreadyInList) return
-    memberList.push({ id: data.newUser.id, name: data.newUser.name, role: data.newUser.role || 1,color_hex:data.colorHex.hexcode || '#57A8A8' }); 
-    renderSidebarMembers();
+    // const alreadyInList = memberList.some(m=>m.id === data.newUser.id)
+    // if (alreadyInList) return
+    // memberList.push({ id: data.newUser.id, name: data.newUser.name, role: data.newUser.role || 1,color_hex:data.colorHex.hexcode || '#57A8A8' }); 
+    getMemberList()
+    // renderSidebarMembers();
 });
 
 socket.on("Error", (data) => {
@@ -172,12 +185,13 @@ messageForm.addEventListener("submit",(e)=>{
     const message = messageInput.value
     if (message.trim().length==0) return
     const payload = {user,message,color:color.hexcode,timeStamp: Date.now()};
- 
+    const answerPayload = {currentSession,isAnswer:true,user}
     if (isAnswerMode){
         if (triesLeft<=0) toastr.warning("You have used up your attempts")
-        if (message.toLowerCase() == currentAnswer.toLowerCase()){
-            socket.emit("answeredCorrectly", payload);
-            renderCorrectMessage(payload)
+        if (message.toLowerCase() == currentSession.answer.toLowerCase()){
+            socket.emit("sessionOver", answerPayload);
+            messageLoader.classList.remove("hidden")
+            messageLoader.classList.add("flex")
         }
         else{
             triesLeft--
@@ -246,6 +260,7 @@ function renderMessage({ user: sender, message, color }) {
 
 
 
+
 //question related
 askBtn.addEventListener("click",()=>{
     if (questionDisabled==true) return toastr.warning("You cannot ask another question until this session is over")
@@ -278,16 +293,17 @@ questionCancelBtn.addEventListener("click",()=>{
 
 
 function HandleQuestionAsked(data){
-    currentQuestion = data.question
-    currentAnswer = data.answer
     inSession = true
+    currentSession = data.session
+    sessionStorage.setItem('currentSession',JSON.stringify(currentSession))
     countdownContainer.classList.remove("text-error")
     countdownContainer.classList.add("text-accent-green")
     gameQuestionCtn.classList.remove("hidden")
     gameQuestionCtn.classList.add("flex")
-    gameQuestionEl.textContent = data.question
+    gameQuestionEl.textContent = data.session.question
     questionInterval = setInterval(()=>{
-        const timeLeft = data.endTime - Date.now()
+        const timeLeft = data.session.end_time - Date.now()
+
         if (timeLeft<=0) return questionTimedOut(data)
         if (timeLeft<30000 && timeLeft>10000){
             countdownContainer.classList.remove("text-accent-green")
@@ -312,7 +328,7 @@ function questionFormCleanup(){
 socket.on("questionSuccess",(data)=>{
     questionFormCleanup()
     if (user.role != 2) return
-    console.log("question asked")
+    console.log("session:",data.session)
     questionContainer.classList.remove("flex")
     questionContainer.classList.add("hidden")
     questionDisabled = true
@@ -359,35 +375,9 @@ socket.on("questionAnsweredWrong",(data)=>{
 })
 
 socket.on("questionAnsweredCorrectly",(data)=>{
-     renderCorrectMessage(data)
+
 })
 
-function renderCorrectMessage({ user: sender, message, color }) {
-    const isMe = sender.id === user.id;
-    let messageEl;
-    if (isMe) {
-        messageEl = `
-        <div class="w-full flex gap-2 justify-end">
-            <p class="max-w-8/10 p-3 text-background rounded-sm bg-accent-green">
-                ${message}
-            </p>
-        </div>`;
-    }
-    else {
-        messageEl = `
-        <div class="w-full flex gap-2 justify-start">
-            <div class="w-10 h-10 rounded-full flex justify-center items-center text-white"
-                 style="background-color: ${color};">
-                ${sender.name.charAt(0).toUpperCase()}
-            </div>
-            <p class="max-w-8/10 p-3 text-background rounded-sm bg-accent-green">
-                ${message}
-            </p>
-        </div>`;
-    }
-    chatContainer.insertAdjacentHTML("beforeend", messageEl);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-}
 
 function renderIncorrectMessage({ user: sender, message, color }) {
     const isMe = sender.id === user.id;
@@ -417,6 +407,12 @@ function renderIncorrectMessage({ user: sender, message, color }) {
 }
 
 function questionTimedOut(data) {
+    if (user.role != 2) return
+    const payload = {currentSession,isAnswer:false,user}
+    socket.emit("sessionOver",payload)
+}
+
+function endTimeOut(){
     clearInterval(questionInterval)
     inSession = false
     isAnswerMode = false
@@ -424,15 +420,73 @@ function questionTimedOut(data) {
     questionModeBtn.classList.remove("text-text-muted")
     answerModeBtn.classList.remove("text-accent-blue")
     answerModeBtn.classList.add("text-text-muted")
-    countdownEl.textContent = 0
-    gameQuestionEl.textContent = `Time's up,the right answer is: \n ${data.answer}`
+    // countdownEl.textContent = 0
+}
+
+socket.on("timeoutHandled", (data) => {
+    console.log(data)
+    endTimeOut()
+    gameQuestionEl.textContent = `Time's up,the right answer is: \n ${data.session.answer}`
     toastr.info("Time's up")
-    
+    toastr.success(data.adminMessage)
+    currentSession.is_active = false
+    sessionStorage.setItem('currentSession',JSON.stringify(currentSession))
+    sessionStorage.setItem('questionDisabled',JSON.stringify(questionDisabled))
+    questionDisabled = false
+    getMemberList();
     setTimeout(()=>{
         gameQuestionCtn.classList.add("hidden")
         gameQuestionCtn.classList.remove("flex")
     },5000)
+})
+
+
+socket.on("answerCorrect", (data) => {
+    endTimeOut()
+    gameQuestionEl.textContent = `The correct answer is: \n ${data.session.answer}`
+    messageLoader.classList.add("hidden")
+    messageLoader.classList.remove("flex")
+    console.log(data)
+    toastr.success(data.message)
+    setTimeout(()=>{
+        toastr.success(data.adminMessage)
+        gameQuestionCtn.classList.add("hidden")
+        gameQuestionCtn.classList.remove("flex")
+    },3000)
+    currentSession.is_active = false
+    sessionStorage.setItem('currentSession',JSON.stringify(currentSession))
+    sessionStorage.setItem('questionDisabled',JSON.stringify(questionDisabled))
+    questionDisabled = false
+    getMemberList();
+    renderCorrectMessage(data)
+  
+})
+
+function renderCorrectMessage(data) {
+    console.log('renderMessage:',data)
+    const isMe = data.correctUser.id === user.id;
+    const hexCode = memberList.filter(user=>user.id == data.correctUser.id)[0].color_hex
+    let messageEl;
+    if (isMe) {
+        messageEl = `
+        <div class="w-full flex gap-2 justify-end">
+            <p class="max-w-8/10 p-3 text-background rounded-sm bg-accent-green">
+                ${data.session.answer}
+            </p>
+        </div>`;
+    }
+    else {
+        messageEl = `
+        <div class="w-full flex gap-2 justify-start">
+            <div class="w-10 h-10 rounded-full flex justify-center items-center text-white"
+                 style="background-color: ${hexCode||'#63D6B0'};">
+                ${data.correctUser.name.charAt(0).toUpperCase()}
+            </div>
+            <p class="max-w-8/10 p-3 text-background rounded-sm bg-accent-green">
+                ${data.session.answer}
+            </p>
+        </div>`;
+    }
+    chatContainer.insertAdjacentHTML("beforeend", messageEl);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
 }
-
-
-

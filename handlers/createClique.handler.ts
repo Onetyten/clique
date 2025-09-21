@@ -1,6 +1,7 @@
 import { Socket } from "socket.io";
 import pool from "../config/pgConnect";
 import cliqueCreateSchema from "../validation/createRoom.validation";
+import redis from "../config/redisConfig";
 
 interface InputType{
     cliqueKey:string,
@@ -12,17 +13,23 @@ export async function handleCreateClique(socket:Socket,{cliqueKey,cliqueName,use
         const { error} = cliqueCreateSchema.validate({cliqueKey,cliqueName,username});
         if (error){
             console.error("validation failed",error.details);
-            return socket.emit("Error",{
-            message:'Invalid input'})
+            return socket.emit("Error",{message:'Invalid input'})
         }
         try {
-            const adminRoleResult= await pool.query(`
-            SELECT id FROM roles
-            WHERE name=$1`,['admin']);
-            if (adminRoleResult.rows.length === 0) {
-                throw new Error("Admin role not found in roles table");
+            let adminRoleId = await redis.get("adminId")
+            if (!adminRoleId){
+                const adminRoleResult= await pool.query(`SELECT id FROM roles WHERE name=$1`,['admin']);
+                if (adminRoleResult.rows.length > 0) {
+                   await redis.set("adminId",adminRoleResult.rows[0].id)
+                   console.log('Cached adminId in Redis');
+                }
+                else{
+
+                socket.emit("Error",{message:'Internal server error'})
+                    throw new Error("Admin role not found in roles table");
+                }
+                adminRoleId = adminRoleResult.rows[0].id;
             }
-            const adminRoleId = adminRoleResult.rows[0].id;
             const createdRoom = await pool.query('INSERT INTO rooms (id,clique_key,name) VALUES (gen_random_uuid(),$1,$2) RETURNING * ',[cliqueKey, cliqueName]);
             const roomId = createdRoom.rows[0].id;
             const roomName = createdRoom.rows[0].name;
@@ -43,6 +50,6 @@ export async function handleCreateClique(socket:Socket,{cliqueKey,cliqueName,use
                 return socket.emit("Error", { message: "This key has already been taken" });
             }
             console.error("Failed to create clique",error);
-            socket.emit("Error", { message: "Failed to create room due to an error, please try again" });
+            return socket.emit("Error", { message: "Failed to create room due to an error, please try again" });
         }
     }

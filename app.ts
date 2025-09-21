@@ -1,6 +1,6 @@
 import dotenv from 'dotenv'
 dotenv.config()
-import express, { Request, Response, urlencoded } from "express";
+import express, { Request, Response } from "express";
 import cors from 'cors'
 import path from 'path'
 import http from 'http'
@@ -10,9 +10,9 @@ import { handleJoinClique } from './handlers/joinClique.handler';
 import fetchGuestRoute from './routes/guest/fetchGuests.route'
 import { handleChatMessage } from './handlers/chatMessage.handler';
 import { handleAskQuestion } from './handlers/AskQuestion.handler';
-import { CorrectAnswerMessage } from './handlers/correctAnswer.handler';
 import { WrongAnswerMessage } from './handlers/incorrectAnswer.handler';
 import { CacheRoleIDs } from './cache/cacheRoleID';
+import { handleSessionOver } from './handlers/handleSessionOver';
 
 
 
@@ -50,17 +50,17 @@ const io = new Server(server,{
     },
 })
 
+
 io.on("connection",(socket:Socket)=>{
     console.log("A user connected",socket.id)
     socket.on("CreateClique",(data)=>handleCreateClique(socket,data))
     socket.on("joinClique",(data)=>handleJoinClique(socket,data))
     socket.on("ChatMessage",(data)=>handleChatMessage(socket,data))
-    socket.on("answeredCorrectly",(data)=>CorrectAnswerMessage(socket,data))
     socket.on("answeredIncorrectly",(data)=>WrongAnswerMessage(socket,data))
     socket.on("askQuestion",(data)=>handleAskQuestion(socket,data))
-    
-    socket.on("disconnect",()=>{
-        console.log("User disconnected:", socket.id)
+    socket.on("sessionOver",(data)=>handleSessionOver(io,socket,data))
+    socket.on("disconnect",(reason)=>{
+        console.log(`User disconnected:, ${socket.id} due to ${reason}`)
     })
 })
 

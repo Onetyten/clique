@@ -1,6 +1,7 @@
 import { Socket } from "socket.io";
 import pool from "../config/pgConnect";
 import userJoinSchema from "../validation/joinRoom.validation";
+import redis from "../config/redisConfig";
 
 
 interface InputType{
@@ -18,7 +19,8 @@ export async function handleJoinClique(socket:Socket,{cliqueKey,username,isFirst
         }
         console.log(`request from ${username} to join clique acknowledged`)
         const name = username.toLowerCase()
-
+        let adminId = parseInt(await redis.get('adminId')|| "2",10)
+        let guestId = parseInt(await redis.get('guestId')|| "1",10)
         try {
             const roomExists = await pool.query('SELECT * FROM rooms WHERE clique_key = $1',[cliqueKey]);      
             if (roomExists.rows.length === 0){
@@ -40,14 +42,22 @@ export async function handleJoinClique(socket:Socket,{cliqueKey,username,isFirst
                     const timeLeft = (isSessionActive.rows[0].end_time - Date.now())/1000
                     return socket.emit("midSessionError", { message: `A session is currently going on in room ${roomName}, rejoin in ${timeLeft}s`, timeLeft})
                 }
-                const guestRoleResult= await pool.query('SELECT id FROM roles WHERE name=$1',['guest']);
-                if (guestRoleResult.rows.length === 0) {
-                    throw new Error("Guest role not found in roles table");
+            
+                if (!guestId){
+                    const guestRoleResult= await pool.query('SELECT id FROM roles WHERE name=$1',['guest']);
+                    if (guestRoleResult.rows.length > 0) {
+                        await redis.set("guestId",guestRoleResult.rows[0].id)
+                        console.log('Cached guestId in Redis');
+                    }
+                    else{
+                        socket.emit("Error",{message:'Internal server error'})
+                         throw new Error("Guest role not found in roles table");
+                    }
+                    guestId = guestRoleResult.rows[0].id;
                 }
-                const guestRoleId = guestRoleResult.rows[0].id;
                 const colorResult = await pool.query(`SELECT id FROM colors ORDER BY random() LIMIT 1`);
                 colorId = colorResult.rows[0].id;
-                const newUserResult = await pool.query('INSERT INTO members (name, room_id, role, color_id) VALUES($1,$2,$3,$4) RETURNING *',[name,roomId,guestRoleId,colorId]);
+                const newUserResult = await pool.query('INSERT INTO members (name, room_id, role, color_id) VALUES($1,$2,$3,$4) RETURNING *',[name,roomId,guestId,colorId]);
                 newUser = newUserResult.rows[0];
             }
             else
@@ -55,6 +65,10 @@ export async function handleJoinClique(socket:Socket,{cliqueKey,username,isFirst
                 const existingUser = await pool.query('SELECT * FROM members WHERE name = $1 AND room_id = $2', [name, roomId]);
                 newUser = existingUser.rows[0];
                 colorId = newUser.color_id
+                const gmExists = await pool.query('SELECT id FROM members WHERE room_id = $1 AND role = $2 ',[roomId,adminId])
+                if (gmExists.rows.length === 0){
+                    await pool.query('UPDATE members SET role = $1 WHERE id = $2 AND NOT EXISTS (SELECT 1 FROM members WHERE room_id = $3 and role = $1 )',[adminId,newUser.id,roomId])
+                }
             }
             const colorHexTable = await pool.query('SELECT * FROM colors WHERE id=$1',[colorId])
             const colorHex =colorHexTable.rows[0]
@@ -63,11 +77,11 @@ export async function handleJoinClique(socket:Socket,{cliqueKey,username,isFirst
             socket.emit("JoinedClique", {
                 message: `Successfully joined ${roomName} `, room:roomExists.rows[0],user: newUser,colorHex
             });
-            socket.to(roomId).emit("userJoined",{ message:`${username} has joined the room`,newUser,colorHex})
+            return socket.to(roomId).emit("userJoined",{ message:`${username} has joined the room`,newUser,colorHex})
         }
         catch (error:any) {
             console.error("Failed to join clique",error);
-            socket.emit("Error", { message: "Failed to join clique due to an error, please try again" });
+            return socket.emit("Error", { message: "Failed to join clique due to an error, please try again" });
         }
 
     }
