@@ -32,19 +32,22 @@
         <%- include("./partials/questionDisplay.ejs") %>
 
         <div id="chatContainer" class="flex-1 w-full overflow-y-auto hide-scrollbar p-6 space-y-2">
-            <!-- messageloader -->
-            <div id="message-loader" class="w-full hidden gap-2 justify-end">
-                <div class="w-28 h-14 text-white rounded-sm bg-accent-blue">
-                    <div class="w-full h-full flex top-0 left-0 justify-center items-center gap-2">
-                        <div class="dot w-3 h-3 rounded-full bg-white"></div>
-                        <div class="dot w-3 h-3 rounded-full bg-white"></div>
-                        <div class="dot w-3 h-3 rounded-full bg-white"></div>
-                    </div>
-                </div>
-            </div>
 
             <!-- everything else -->
         </div>
+
+        <div class="hidden justify-end w-full  hide-scrollbar p-6 space-y-2">
+            <div id="message-loader" class="w-full flex gap-2 justify-end">
+                <div class="w-20 h-10 text-white rounded-sm bg-accent-blue">
+                    <div class="w-full h-full flex top-0 left-0 justify-center items-center gap-2">
+                        <div class="dot w-2 h-2 rounded-full bg-white"></div>
+                        <div class="dot w-2 h-2 rounded-full bg-white"></div>
+                        <div class="dot w-2 h-2 rounded-full bg-white"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
 
 
 
