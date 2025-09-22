@@ -1,9 +1,29 @@
-<div id="sidebar" class="w-64 transition-all duration-300 text-text-primary flex flex-col items-start justify-start bg-background hide-scrollbar min-h-screen overflow-y-scroll">
+<div id="sidebar" class="w-64 transition-all duration-300 text-text-primary hidden lg:flex flex-col items-start justify-start bg-background hide-scrollbar min-h-screen overflow-y-scroll">
     <div id="sidebar-head" class="mb-3 p-6 text-2xl  w-full gap-6 flex justify-between items-baseline">
         <p id="roomName"><%= roomIndex %></p>
         <i id="toggleSidebar" class="fa-solid fa-bars text-base cursor-pointer"></i>
-    </div>
-    <div id="memberListContainer" class="w-full p-3 flex flex-col gap-4">
-        <!-- members will be rendered here -->
+    </div>  
+    <div class="w-full memberListContainer p-3 flex flex-col gap-4">
     </div>
 </div>
+
+
+<!-- <div id="sidebar-mobile" class="w-14 transition-all lg:hidden duration-300 text-text-primary flex flex-col items-start justify-start bg-background hide-scrollbar min-h-screen overflow-y-scroll">
+    <div class="my-6 text-2xl w-full gap-3 flex flex-col justify-center items-center">
+        <p id="roomName"><%= roomIndex.charAt(0).toUpperCase() %></p>
+        <i id="open-mobile-sidebar" class="fa-solid fa-bars text-base cursor-pointer"></i>
+    </div>
+    <div id="memberList-mobile" class="w-full flex items-center flex-col gap-2">
+    </div>
+</div> -->
+
+
+<div id="mobile-sidebar" class="fixed text-text-primary inset-0 hidden z-60 lg:hidden">
+  <div class="w-8/12 sm:w-64 bg-background min-h-screen overflow-y-scroll hide-scrollbar">
+    <div id="sidebar-head" class="mb-3 p-3 text-xl font-bold w-full gap-3 flex justify-between items-baseline">
+      <p id="roomName"><%= roomIndex %></p>
+    </div>
+    <div class="memberListContainer w-full p-3 flex flex-col gap-4"></div>
+  </div>
+  <div id="mobile-sidebar-closer" class="flex-1 h-full bg-background/40 backdrop-blur-md"></div>
+</div> 

@@ -3,7 +3,7 @@
 const socket = io();
 let memberList = [];
 const messageList = [];
-const memberContainer = document.getElementById("memberListContainer");
+const memberContainers = document.querySelectorAll(".memberListContainer");
 const sidebar = document.getElementById("sidebar");
 const toggleSidebar = document.getElementById("toggleSidebar");
 const roomNameEl = document.getElementById("roomName");
@@ -40,7 +40,10 @@ const room = JSON.parse(sessionStorage.getItem("room"));
 const user = JSON.parse(sessionStorage.getItem("user"))
 const color = JSON.parse(sessionStorage.getItem("color"))
 let currentSession = JSON.parse(sessionStorage.getItem("currentSession"))
-
+const mobileMiniSidebarBtn = document.getElementById("open-mobile-sidebar");
+const mobileSidebar = document.getElementById("mobile-sidebar");
+const mobileSidebarCloser = document.getElementById("mobile-sidebar-closer");
+const pulser = document.getElementById("pulser")
 
 window.addEventListener('DOMContentLoaded',async()=>{ 
     console.log(roomName)
@@ -100,27 +103,30 @@ async function getMemberList () {
 }
 
 function renderSidebarMembers(){
-    memberContainer.innerHTML = ""
-    memberList.forEach((member) => {
-        const memberEl = `
-        <div class="flex justify-between items-center w-full">
-            <div class="flex gap-2 justify-center items-center">
-                <div class="w-10 h-10 capitalize rounded-full flex justify-center items-center text-white" style="background-color: ${member.color_hex};">
-                    ${member.name.slice(0,1)}
+    memberContainers.forEach(container=>{
+         container.innerHTML = ""
+             memberList.forEach((member) => {
+            const memberEl = `
+            <div class="flex justify-between  text-sm 2xl:text-base items-center w-full">
+                <div class="flex gap-2 justify-center items-center">
+                    <div class="w-10 h-10 capitalize rounded-full flex justify-center items-center text-white" style="background-color: ${member.color_hex};">
+                        ${member.name.slice(0,1)}
+                    </div>
+                    <div class="flex  flex-col gap-2">
+                        <p class="capitalize hideOnCollapse">${member.name}</p>
+                        <p class="text-accent-blue hideOnCollapse">${member.score || 0} pts</p>
+                    </div>
                 </div>
-                <div class="flex flex-col gap-2">
-                    <p class="capitalize hideOnCollapse">${member.name}</p>
-                    <p class="text-accent-blue hideOnCollapse">${member.score || 0} pts</p>
+                <div class="flex gap-2 items-center hideOnCollapse">
+                    ${ member.id == user.id? `<div class="w-3 h-3 bg-accent-green rounded-full"></div>` : ""}
+                    ${ member.role === 2? `<div class="text-xs 2xl:text-sm text-white px-2 bg-accent-blue rounded-sm">GM</div>`: ""}
                 </div>
-            </div>
-            <div class="flex gap-2 items-center hideOnCollapse">
-                ${ member.id == user.id? `<div class="w-3 h-3 bg-accent-green rounded-full"></div>` : ""}
-                ${ member.role === 2? `<div class="text-sm text-white px-2 bg-accent-blue rounded-sm">GM</div>`: ""}
-            </div>
-        </div>`
-        memberContainer.insertAdjacentHTML("beforeend", memberEl)
+            </div>`
+            container.insertAdjacentHTML("beforeend", memberEl)
+        })
     })
 }
+
 
 toggleSidebar.addEventListener("click", () => {
     isCollapsed = !isCollapsed;
@@ -130,9 +136,11 @@ toggleSidebar.addEventListener("click", () => {
 
         sidebarHeadEl.classList.remove("justify-between");
         sidebarHeadEl.classList.add("flex-col-reverse", "justify-center");
-
-        memberContainer.classList.remove("p-6");
-        memberContainer.classList.add("p-2");
+        memberContainers.forEach(container=>{
+            container.classList.remove("p-6");
+            container.classList.add("p-2");
+        })
+    
 
         roomNameEl.textContent = room.name.charAt(0).toUpperCase();
 
@@ -145,9 +153,11 @@ toggleSidebar.addEventListener("click", () => {
 
         sidebarHeadEl.classList.remove("flex-col-reverse", "justify-center");
         sidebarHeadEl.classList.add("justify-between");
+        memberContainers.forEach(container=>{
+            container.classList.remove("p-2");
+            container.classList.add("p-6");
+        })
 
-        memberContainer.classList.remove("p-2");
-        memberContainer.classList.add("p-6");
 
         roomNameEl.textContent = room.name;
 
@@ -155,6 +165,15 @@ toggleSidebar.addEventListener("click", () => {
             el.classList.remove("hidden");
         });
     }
+});
+
+mobileMiniSidebarBtn.addEventListener("click", () => {
+    mobileSidebar.classList.remove("hidden")
+    mobileSidebar.classList.add("flex")
+})
+mobileSidebarCloser.addEventListener("click", () => {
+    mobileSidebar.classList.add("hidden")
+    mobileSidebar.classList.remove("flex")
 });
 
 
@@ -221,13 +240,17 @@ socket.on("messageSuccess",(data)=>{
 socket.on("messageSent",(data)=>{
     renderMessage(data)
 })
+
+
+
+
 function renderMessage({ user: sender, message, color }) {
     const isMe = sender.id === user.id;
     let messageEl;
     if (isMe) {
         messageEl = `
         <div class="w-full flex gap-2 justify-end">
-            <p class="max-w-8/10 p-3 text-white rounded-sm bg-accent-blue">
+            <p class="max-w-8/10 p-3 text-white text-xs sm:text-base rounded-sm bg-accent-blue">
                 ${message}
             </p>
         </div>`;
@@ -239,7 +262,7 @@ function renderMessage({ user: sender, message, color }) {
                  style="background-color: ${color};">
                 ${sender.name.charAt(0).toUpperCase()}
             </div>
-            <p class="max-w-8/10 p-3 text-text-primary rounded-sm bg-background">
+            <p class="max-w-8/10 p-3 text-xs sm:text-base text-text-primary rounded-sm bg-background">
                 ${message}
             </p>
         </div>`;
@@ -294,10 +317,16 @@ questionCancelBtn.addEventListener("click",()=>{
     questionContainer.classList.add("hidden")
 })
 
+function setPulserColor(colorClass) {
+    pulser.classList.remove("bg-accent-blue", "bg-error", "bg-accent-green","bg-warning");
+    pulser.classList.add(colorClass);
+}
+
 
 function HandleQuestionAsked(data){
     inSession = true
     currentSession = data.session
+    renderQuestionInText(data.session)
     sessionStorage.setItem('currentSession',JSON.stringify(currentSession))
     countdownContainer.classList.remove("text-error")
     countdownContainer.classList.add("text-accent-green")
@@ -309,15 +338,46 @@ function HandleQuestionAsked(data){
 
         if (timeLeft<=0) return questionTimedOut(data)
         if (timeLeft<30000 && timeLeft>10000){
+            setPulserColor("bg-warning");
             countdownContainer.classList.remove("text-accent-green")
             countdownContainer.classList.add("text-warning")
         }
         else if(timeLeft<10000){
+            setPulserColor("bg-error");
             countdownContainer.classList.remove("text-warning")
             countdownContainer.classList.add("text-error")
         }
         countdownEl.textContent = (timeLeft/1000).toFixed(0)
     },1000)
+}
+
+function renderQuestionInText(session) {
+    const isMe = session.id === user.id;
+    let messageEl;
+
+    if (isMe) {
+        messageEl = `
+        <div class="w-full flex gap-2 justify-end">
+            <p class="max-w-8/10 p-3 text-white text-xs sm:text-base rounded-sm bg-accent-blue">
+               <i class="fa-solid text-sm text-white fa-bolt"></i> Question: ${session.question}
+            </p>
+        </div>`;
+    } 
+    else {
+        const questionnaire = memberList.filter(user=>user.id == session.gm_id)[0]
+        messageEl = `
+        <div class="w-full flex gap-2 justify-start">
+            <div class="w-10 h-10 rounded-full flex justify-center items-center text-white"
+                 style="background-color: ${questionnaire.color_hex};">
+                ${questionnaire.name.charAt(0).toUpperCase()}
+            </div>
+            <p class="max-w-8/10 p-3 text-xs sm:text-base text-white rounded-sm bg-accent-blue">
+                <i class="fa-solid text-sm text-white fa-bolt"></i> ${session.question}
+            </p>
+        </div>`;
+    }
+    chatContainer.insertAdjacentHTML("beforeend", messageEl);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
 function questionFormCleanup(){
@@ -395,7 +455,7 @@ function renderIncorrectMessage({ user: sender, message, color }) {
     if (isMe) {
         messageEl = `
         <div class="w-full flex gap-2 justify-end">
-            <p class="max-w-8/10 p-3 text-white rounded-sm bg-error">
+            <p class="max-w-8/10 p-3 text-xs sm:text-base text-white rounded-sm bg-error">
                 ${message}
             </p>
         </div>`;
@@ -407,7 +467,7 @@ function renderIncorrectMessage({ user: sender, message, color }) {
                  style="background-color: ${color};">
                 ${sender.name.charAt(0).toUpperCase()}
             </div>
-            <p class="max-w-8/10 p-3 text-white rounded-sm bg-error">
+            <p class="max-w-8/10 p-3 text-xs sm:text-base text-white rounded-sm bg-error">
                 ${message}
             </p>
         </div>`;
@@ -417,7 +477,6 @@ function renderIncorrectMessage({ user: sender, message, color }) {
 }
 
 function questionTimedOut(data) {
-    if (user.role != 2) return
     const payload = {currentSession,isAnswer:false,user}
     socket.emit("sessionOver",payload)
 }
@@ -455,6 +514,7 @@ socket.on("timeoutHandled", (data) => {
         setTimeout(()=>{
             counterBanner.classList.add("hidden")
             counterBanner.classList.remove("flex")
+            setPulserColor("bg-accent-blue");
         },2000)
 
     },5000)
@@ -467,6 +527,7 @@ socket.on("timeoutHandled", (data) => {
 
 socket.on("answerCorrect", (data) => {
     endTimeOut()
+    setPulserColor("bg-accent-green")
     gameQuestionEl.textContent = `The correct answer is: \n ${data.session.answer}`
     messageLoader.classList.add("hidden")
     messageLoader.classList.remove("flex")
@@ -482,26 +543,9 @@ socket.on("answerCorrect", (data) => {
         setTimeout(()=>{
             counterBanner.classList.add("hidden")
             counterBanner.classList.remove("flex")
+            setPulserColor("bg-accent-blue");
         },2000)
     },3000)
-    currentSession.is_active = false
-    sessionStorage.setItem('currentSession',JSON.stringify(currentSession))
-    sessionStorage.setItem('questionDisabled',JSON.stringify(questionDisabled))
-    questionDisabled = false
-    QuestionBtn.classList.add("text-accent-blue")
-    QuestionBtn.classList.remove("text-text-muted")
-    getMemberList();
-  
-})
-
-socket.on("AdminDisconnect", (data) => {
-    endTimeOut()
-    gameQuestionEl.textContent = `The correct answer is: \n ${data.session.answer}`
-    messageLoader.classList.add("hidden")
-    messageLoader.classList.remove("flex")
-    toastr.warning(data.adminMessage)
-    gameQuestionCtn.classList.add("hidden")
-    gameQuestionCtn.classList.remove("flex")
     currentSession.is_active = false
     sessionStorage.setItem('currentSession',JSON.stringify(currentSession))
     sessionStorage.setItem('questionDisabled',JSON.stringify(questionDisabled))
@@ -521,7 +565,7 @@ function renderCorrectMessage(data) {
     if (isMe) {
         messageEl = `
         <div class="w-full flex gap-2 justify-end">
-            <p class="max-w-8/10 p-3 text-background rounded-sm bg-accent-green">
+            <p class="max-w-8/10 p-3 text-xs sm:text-base text-background rounded-sm bg-accent-green">
                 ${data.session.answer}
             </p>
         </div>`;
@@ -533,7 +577,7 @@ function renderCorrectMessage(data) {
                  style="background-color: ${hexCode||'#63D6B0'};">
                 ${data.correctUser.name.charAt(0).toUpperCase()}
             </div>
-            <p class="max-w-8/10 p-3 text-background rounded-sm bg-accent-green">
+            <p class="max-w-8/10 p-3 text-xs sm:text-base text-background rounded-sm bg-accent-green">
                 ${data.session.answer}
             </p>
         </div>`;

@@ -20,7 +20,10 @@ export async function handleSessionOver(io:Server,socket:Socket,{currentSession,
             return socket.emit("Error",{message:'Invalid input'})
         }
         try {
-
+            const ongoingSessions = await pool.query('SELECT id FROM sessions WHERE room_id = $1 and is_active = true',[currentSession.room_id])
+            if (ongoingSessions.rows.length == 0 ){
+                return
+            }
             await pool.query(`UPDATE sessions SET is_active=false WHERE id = $1`,[currentSession.id])
             const addedScore = 10
             const guestID = parseInt(await redis.get('guestId') || "1", 10)

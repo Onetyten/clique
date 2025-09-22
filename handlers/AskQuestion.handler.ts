@@ -13,8 +13,7 @@ interface QuestionType{
 export async function handleAskQuestion(socket: Socket, { user,question,answer, endTime }: QuestionType) {
   const gameRoom = await pool.query(`SELECT * FROM members WHERE room_id=$1`,[user.room_id])
   if (gameRoom.rows.length <= 2) return socket.emit("questionError", { message: "There must be more that two players to start a game session" });
-  const existingSession = await pool.query('SELECT * FROM sessions WHERE room_id = $1 AND is_active IS true',[user.room_id])
-  if (existingSession.rows.length>0) return socket.emit("questionError", { message: "You cannot ask questions during an existing session" });
+  await pool.query('UPDATE sessions SET is_active = false WHERE room_id = $1',[user.room_id])
   let adminId: string | null = await redis.get('adminId');
 
   if (!adminId) {

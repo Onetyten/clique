@@ -9,7 +9,8 @@ interface InputType{
     username:string
 }
 
-export async function handleCreateClique(socket:Socket,{cliqueKey,cliqueName,username}:InputType){
+export async function handleCreateClique(socket:Socket,{cliqueKey,cliqueName,username}:InputType,socketUserMap:Map<string,{userId: string; roomId: string;
+isAdmin: boolean;}>){
         const { error} = cliqueCreateSchema.validate({cliqueKey,cliqueName,username});
         if (error){
             console.error("validation failed",error.details);
@@ -41,6 +42,7 @@ export async function handleCreateClique(socket:Socket,{cliqueKey,cliqueName,use
             const colorHexTable = await pool.query('SELECT * FROM colors WHERE id=$1',[colorId])
             const colorHex =colorHexTable.rows[0]
             socket.join(roomId);
+            socketUserMap.set(socket.id,{userId:newUser.id,roomId,isAdmin:newUser.role === 2})
             socket.to(roomId).emit("userJoined",{ message:`${savedName} has joined the room`, savedName})
             console.log( `clique ${roomName} created by ${savedName}`);
             return socket.emit("CliqueCreated",{message:'Clique created',room:createdRoom.rows[0],user:newUser,colorHex})

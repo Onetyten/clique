@@ -13,7 +13,7 @@ import { handleAskQuestion } from './handlers/AskQuestion.handler';
 import { WrongAnswerMessage } from './handlers/incorrectAnswer.handler';
 import { CacheRoleIDs } from './cache/cacheRoleID';
 import { handleSessionOver } from './handlers/handleSessionOver';
-import pool from './config/pgConnect';
+import { scorchedEarth } from './handlers/endClique.handler';
 
 
 
@@ -53,9 +53,11 @@ const io = new Server(server,{
 
 const socketUserMap = new Map<string,{userId:string,roomId:string,isAdmin:boolean}>()
 
+
+
 io.on("connection",(socket:Socket)=>{
     console.log("A user connected",socket.id)
-    socket.on("CreateClique",(data)=>handleCreateClique(socket,data))
+    socket.on("CreateClique",(data)=>handleCreateClique(socket,data,socketUserMap))
     socket.on("joinClique",(data)=>handleJoinClique(socket,data,socketUserMap))
     socket.on("ChatMessage",(data)=>handleChatMessage(socket,data))
     socket.on("answeredIncorrectly",(data)=>WrongAnswerMessage(socket,data))
@@ -64,19 +66,25 @@ io.on("connection",(socket:Socket)=>{
 
     socket.on("disconnect",async (reason)=>{
         console.log(`User disconnected:, ${socket.id} due to ${reason}`)
-        const userData  = socketUserMap.get(socket.id)
-        if (!userData) return
-        if (userData.isAdmin){
-            console.log("Admin disconnected, ending ongoing session");
-            const res = await pool.query("UPDATE sessions SET is_active = false WHERE room_id = $1 AND is_active = true RETURNING *",[userData.roomId])
-            if (res.rows.length>0){
-                io.to(userData.roomId).emit("AdminDisconnect", {
-                    adminMessage: "Session ended because the game master disconnected",
-                    session: res.rows[0]
-                });
-            }
-        }
+        const userData = socketUserMap.get(socket.id)
         socketUserMap.delete(socket.id)
+        if (!userData) return
+        const { roomId } = userData
+        const availableMembers = [...socketUserMap.values()].filter(member=>member.roomId === roomId)
+        if (availableMembers.length === 0){
+            console.log(`Room ${roomId} is empty waiting 120 seconds before cleanup...`)
+            setTimeout(async()=>{
+                const finalMemberCheck = [...socketUserMap.values()].filter(member=>member.roomId === roomId)
+                if (finalMemberCheck.length === 0){
+                    console.log(`Scorched Earth! Cleaning up room ${roomId}`)
+                    await scorchedEarth(roomId)
+                }
+                else{
+                    console.log(`Room ${roomId} was repopulated. Skipping cleanup.`)
+                }
+            },120000)
+        }
+
     })
 })
 
