@@ -85,6 +85,11 @@ async function getMemberList () {
             }
             sessionStorage.setItem('user', JSON.stringify(user));
             renderSidebarMembers()
+            if (isCollapsed){
+                document.querySelectorAll(".hideOnCollapse").forEach(el => {
+                    el.classList.add("hidden");
+                });
+            }
         }
         return
     } 
@@ -479,6 +484,24 @@ socket.on("answerCorrect", (data) => {
             counterBanner.classList.remove("flex")
         },2000)
     },3000)
+    currentSession.is_active = false
+    sessionStorage.setItem('currentSession',JSON.stringify(currentSession))
+    sessionStorage.setItem('questionDisabled',JSON.stringify(questionDisabled))
+    questionDisabled = false
+    QuestionBtn.classList.add("text-accent-blue")
+    QuestionBtn.classList.remove("text-text-muted")
+    getMemberList();
+  
+})
+
+socket.on("AdminDisconnect", (data) => {
+    endTimeOut()
+    gameQuestionEl.textContent = `The correct answer is: \n ${data.session.answer}`
+    messageLoader.classList.add("hidden")
+    messageLoader.classList.remove("flex")
+    toastr.warning(data.adminMessage)
+    gameQuestionCtn.classList.add("hidden")
+    gameQuestionCtn.classList.remove("flex")
     currentSession.is_active = false
     sessionStorage.setItem('currentSession',JSON.stringify(currentSession))
     sessionStorage.setItem('questionDisabled',JSON.stringify(questionDisabled))

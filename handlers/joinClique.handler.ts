@@ -10,7 +10,9 @@ interface InputType{
     isFirstConn:boolean
 }
 
-export async function handleJoinClique(socket:Socket,{cliqueKey,username,isFirstConn}:InputType){
+export async function handleJoinClique(socket:Socket,{cliqueKey,username,isFirstConn}:InputType,socketUserMap:Map<string,{userId: string; roomId: string;
+isAdmin: boolean;}>){
+
         const { error} = userJoinSchema.validate({cliqueKey,username,isFirstConn});
         if (error){
             console.error("validation failed",error.details);
@@ -77,6 +79,7 @@ export async function handleJoinClique(socket:Socket,{cliqueKey,username,isFirst
             socket.emit("JoinedClique", {
                 message: `Successfully joined ${roomName} `, room:roomExists.rows[0],user: newUser,colorHex
             });
+            socketUserMap.set(socket.id,{userId:newUser.id,roomId,isAdmin:newUser.role === 2})
             return socket.to(roomId).emit("userJoined",{ message:`${username} has joined the room`,newUser,colorHex})
         }
         catch (error:any) {

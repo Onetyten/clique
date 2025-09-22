@@ -13,6 +13,7 @@ import { handleAskQuestion } from './handlers/AskQuestion.handler';
 import { WrongAnswerMessage } from './handlers/incorrectAnswer.handler';
 import { CacheRoleIDs } from './cache/cacheRoleID';
 import { handleSessionOver } from './handlers/handleSessionOver';
+import pool from './config/pgConnect';
 
 
 
@@ -50,17 +51,32 @@ const io = new Server(server,{
     },
 })
 
+const socketUserMap = new Map<string,{userId:string,roomId:string,isAdmin:boolean}>()
 
 io.on("connection",(socket:Socket)=>{
     console.log("A user connected",socket.id)
     socket.on("CreateClique",(data)=>handleCreateClique(socket,data))
-    socket.on("joinClique",(data)=>handleJoinClique(socket,data))
+    socket.on("joinClique",(data)=>handleJoinClique(socket,data,socketUserMap))
     socket.on("ChatMessage",(data)=>handleChatMessage(socket,data))
     socket.on("answeredIncorrectly",(data)=>WrongAnswerMessage(socket,data))
     socket.on("askQuestion",(data)=>handleAskQuestion(socket,data))
     socket.on("sessionOver",(data)=>handleSessionOver(io,socket,data))
-    socket.on("disconnect",(reason)=>{
+
+    socket.on("disconnect",async (reason)=>{
         console.log(`User disconnected:, ${socket.id} due to ${reason}`)
+        const userData  = socketUserMap.get(socket.id)
+        if (!userData) return
+        if (userData.isAdmin){
+            console.log("Admin disconnected, ending ongoing session");
+            const res = await pool.query("UPDATE sessions SET is_active = false WHERE room_id = $1 AND is_active = true RETURNING *",[userData.roomId])
+            if (res.rows.length>0){
+                io.to(userData.roomId).emit("AdminDisconnect", {
+                    adminMessage: "Session ended because the game master disconnected",
+                    session: res.rows[0]
+                });
+            }
+        }
+        socketUserMap.delete(socket.id)
     })
 })
 
