@@ -20,6 +20,8 @@ const askBtn = document.getElementById("ask-btn");
 const gameQuestionCtn = document.getElementById("game-question-container");
 const gameQuestionEl = document.getElementById("game-question-el");
 const questionLoadingDots = document.getElementById("question-loading-dots")
+const counterBanner = document.getElementById("counter-banner")
+const bannerNumberEl = document.getElementById("banner-num")
 // let questionDisabled = JSON.parse(sessionStorage.getItem('questionDisabled')) || false;
 let questionDisabled = false;
 const countdownEl = document.getElementById("countdown-el");
@@ -153,11 +155,7 @@ toggleSidebar.addEventListener("click", () => {
 
 socket.on("userJoined", (data) => {
     toastr.info(data.message);
-    // const alreadyInList = memberList.some(m=>m.id === data.newUser.id)
-    // if (alreadyInList) return
-    // memberList.push({ id: data.newUser.id, name: data.newUser.name, role: data.newUser.role || 1,color_hex:data.colorHex.hexcode || '#57A8A8' }); 
     getMemberList()
-    // renderSidebarMembers();
 });
 
 socket.on("Error", (data) => {
@@ -335,6 +333,13 @@ socket.on("questionSuccess",(data)=>{
     sessionStorage.setItem('questionDisabled',JSON.stringify(questionDisabled))
     QuestionBtn.classList.remove("text-accent-blue")
     QuestionBtn.classList.add("text-text-muted")
+    counterBanner.classList.remove("hidden")
+    counterBanner.classList.add("flex")
+    bannerNumberEl.textContent = `Round ${data.roundNum}`
+    setTimeout(()=>{
+        counterBanner.classList.add("hidden")
+        counterBanner.classList.remove("flex")
+    },2000)
     HandleQuestionAsked(data)
 })
 
@@ -433,11 +438,25 @@ socket.on("timeoutHandled", (data) => {
     sessionStorage.setItem('currentSession',JSON.stringify(currentSession))
     sessionStorage.setItem('questionDisabled',JSON.stringify(questionDisabled))
     questionDisabled = false
+    QuestionBtn.classList.add("text-accent-blue")
+    QuestionBtn.classList.remove("text-text-muted")
     getMemberList();
     setTimeout(()=>{
         gameQuestionCtn.classList.add("hidden")
         gameQuestionCtn.classList.remove("flex")
+        counterBanner.classList.remove("hidden")
+        counterBanner.classList.add("flex")
+        bannerNumberEl.textContent = `Round ${data.roundNum} Over`
+        setTimeout(()=>{
+            counterBanner.classList.add("hidden")
+            counterBanner.classList.remove("flex")
+        },2000)
+
     },5000)
+    counterBanner.classList.remove("hidden")
+    counterBanner.classList.add("flex")
+    bannerNumberEl.textContent = data.roundNum
+
 })
 
 
@@ -452,11 +471,20 @@ socket.on("answerCorrect", (data) => {
         toastr.success(data.adminMessage)
         gameQuestionCtn.classList.add("hidden")
         gameQuestionCtn.classList.remove("flex")
+        counterBanner.classList.remove("hidden")
+        counterBanner.classList.add("flex")
+        bannerNumberEl.textContent = `Round ${data.roundNum} Over`
+        setTimeout(()=>{
+            counterBanner.classList.add("hidden")
+            counterBanner.classList.remove("flex")
+        },2000)
     },3000)
     currentSession.is_active = false
     sessionStorage.setItem('currentSession',JSON.stringify(currentSession))
     sessionStorage.setItem('questionDisabled',JSON.stringify(questionDisabled))
     questionDisabled = false
+    QuestionBtn.classList.add("text-accent-blue")
+    QuestionBtn.classList.remove("text-text-muted")
     getMemberList();
     renderCorrectMessage(data)
   

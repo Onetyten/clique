@@ -6,14 +6,31 @@
     <title>Clique <%=roomIndex%></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="/css/output.css">
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 </head>
-<body class="bg-background-100 h-screen flex">
-
+<body class="bg-background-100  h-screen flex">
+    
     <%- include("./partials/sidebar.ejs") %>
 
+    <div id="counter-banner" class="fixed inset-0 hidden justify-center items-center bg-background/50 backdrop-blur-sm z-40">
+        <div class="p-12 w-full bg-accent-blue text-sm text-white rounded-sm flex justify-center items-center">
+            <p id="banner-num" class="text-6xl font-bold"></p>
+        </div>
+    </div>
+
+    <div class="fixed bg-background-100/80 backdrop-blur-3xl inset-0 flex justify-center items-center -z-10">
+    </div>
+    <div class="fixed inset-0 flex justify-center items-center -z-20 overflow-hidden">
+        <div class="blob bg-accent-blue w-80 h-80 rounded-full animate-pulse"></div>
+    </div>
+
+
+
     <div class="hide-scrollbar relative min-h-screen flex-1 flex flex-col w-full">
+
         <%- include("./partials/questionDisplay.ejs") %>
+
         <div id="chatContainer" class="flex-1 w-full overflow-y-auto hide-scrollbar p-6 space-y-2">
             <!-- messageloader -->
             <div id="message-loader" class="w-full hidden gap-2 justify-end">
@@ -28,6 +45,8 @@
 
             <!-- everything else -->
         </div>
+
+
 
         <%- include("./partials/questionForm.ejs")  %>
         <%- include("./partials/messageInput.ejs")  %>

@@ -39,7 +39,7 @@ export async function handleJoinClique(socket:Socket,{cliqueKey,username,isFirst
                 return socket.emit("Error", { message: `user ${name} already exists in this clique choose another name` })}
                 const isSessionActive = await pool.query('SELECT is_active,end_time FROM sessions WHERE room_id=$1 AND is_active IS true',[roomId])
                 if (isSessionActive.rows.length>0){
-                    const timeLeft = (isSessionActive.rows[0].end_time - Date.now())/1000
+                    const timeLeft = Math.floor((isSessionActive.rows[0].end_time - Date.now())/1000)
                     return socket.emit("midSessionError", { message: `A session is currently going on in room ${roomName}, rejoin in ${timeLeft}s`, timeLeft})
                 }
             

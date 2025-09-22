@@ -39,6 +39,9 @@ export async function handleSessionOver(io:Server,socket:Socket,{currentSession,
                 }
               
             }
+            const numberOfSession = await pool.query('SELECT COUNT (*) FROM sessions WHERE room_id = $1',[currentSession.room_id])
+            const totalSessions = parseInt(numberOfSession.rows[0].count, 10)
+            const roundNum = totalSessions +1
             const newGM = newGMTable.rows[0]
             console.log("newGM",newGM)
             await pool.query(
@@ -52,10 +55,10 @@ export async function handleSessionOver(io:Server,socket:Socket,{currentSession,
             if (isAnswer==true){
                 console.log("answer correct session over")
                 await pool.query('UPDATE members SET score = score + $1 WHERE id=$2',[addedScore,user.id])
-                return  io.to(currentSession.room_id).emit("answerCorrect", {message:`Correct, ${addedScore} points to ${user.name}`,adminMessage:`The new Game Master is ${newGM.name}`,correctUser:user, session:currentSession})
+                return  io.to(currentSession.room_id).emit("answerCorrect", {message:`Correct, ${addedScore} points to ${user.name}`,adminMessage:`The new Game Master is ${newGM.name}`,correctUser:user, session:currentSession,roundNum})
             }
             console.log("timed out session over")
-            return io.to(currentSession.room_id).emit("timeoutHandled", {adminMessage:`The new Game Master is ${newGM.name}`,session:currentSession})
+            return io.to(currentSession.room_id).emit("timeoutHandled", {adminMessage:`The new Game Master is ${newGM.name}`,session:currentSession,roundNum})
         } 
         catch (error) {
             console.log(error)
