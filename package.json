@@ -1,11 +1,11 @@
 {
   "name": "clique",
   "version": "1.0.0",
-  "main": "dist/app.js",
+  "main": "app.js",
   "scripts": {
     "dev": "nodemon --exec ts-node app.ts",
     "build": "tsc",
-    "start": "node dist/app.js",
+    "start": "node app.js",
     "lint": "eslint",
     "type-check": "tsc --noEmit",
     "check": "npm run lint && npm run type-check"

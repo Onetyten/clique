@@ -425,7 +425,6 @@ questionModeBtn.addEventListener("click",()=>{
     questionModeBtn.classList.remove("text-text-muted")
     answerModeBtn.classList.remove("text-accent-blue")
     answerModeBtn.classList.add("text-text-muted")
-    toastr.success("switched to question mode")
 })
 
 answerModeBtn.addEventListener("click",()=>{
@@ -437,7 +436,6 @@ answerModeBtn.addEventListener("click",()=>{
     questionModeBtn.classList.add("text-text-muted")
     answerModeBtn.classList.add("text-accent-blue")
     answerModeBtn.classList.remove("text-text-muted")
-    toastr.success("switched to answer mode")
 })
 
 socket.on("questionAnsweredWrong",(data)=>{
