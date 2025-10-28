@@ -16,8 +16,7 @@ isAdmin: boolean;}>){
         const { error} = userJoinSchema.validate({cliqueKey,username,isFirstConn});
         if (error){
             console.error("validation failed",error.details);
-            return socket.emit("Error",{
-            message:'Invalid input'})
+            return socket.emit("Error",{message:error.message})
         }
         console.log(`request from ${username} to join clique acknowledged`)
         const name = username.toLowerCase()

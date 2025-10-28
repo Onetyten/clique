@@ -14,7 +14,7 @@ isAdmin: boolean;}>){
         const { error} = cliqueCreateSchema.validate({cliqueKey,cliqueName,username});
         if (error){
             console.error("validation failed",error.details);
-            return socket.emit("Error",{message:'Invalid input'})
+            return socket.emit("Error",{message:error.message})
         }
         try {
             let adminRoleId = await redis.get("adminId")

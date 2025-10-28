@@ -16,14 +16,14 @@ import { handleSessionOver } from './handlers/handleSessionOver';
 import { scorchedEarth } from './handlers/endClique.handler';
 
 
-
+const rootDir = path.basename(__dirname) === "dist"?path.join(__dirname,".."):__dirname
 const app = express()
 app.use(cors({origin:"*"}))
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
-app.use(express.static(path.join(__dirname,"public")))
+app.use(express.static(path.join(rootDir,"public")))
 app.set("view engine","ejs")
-app.set("views",path.join(__dirname,"views"))
+app.set("views",path.join(rootDir,"views"))
 
 CacheRoleIDs()
 
