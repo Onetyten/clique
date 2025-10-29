@@ -1,11 +1,10 @@
 import Joi from "joi";
 
 const cliqueCreateSchema = Joi.object({
-  cliqueKey: Joi.string().empty("").min(3).max(50).messages({
+  cliqueKey: Joi.string().empty("").min(3).messages({
     "string.base": "Key must be a string",
     "string.empty": "Key is required",
     "string.min": "Key must be at least 3 characters long",
-    "string.max": "Key must not exceed 50 characters",
     "any.required": "Key must be provided"
   }),
   cliqueName: Joi.string().empty("").min(3).max(50).messages({

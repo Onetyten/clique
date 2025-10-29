@@ -1,12 +1,6 @@
 import Joi from "joi";
 
-const userJoinSchema = Joi.object({
-  cliqueKey: Joi.string().min(3).required().messages({
-      "string.base": "Key must be a string.",
-      "string.empty": "Key is required.",
-      "string.min": "Key must be at least 3 characters long.",
-      "any.required": "Key must be provided."
-    }),
+const userRejoinSchema = Joi.object({
   cliqueName: Joi.string().empty("").min(3).max(50).messages({
     "string.base": "Clique name must be a string",
     "string.empty": "Clique name is required",
@@ -19,7 +13,12 @@ const userJoinSchema = Joi.object({
       "string.min": "Username must be at least 2 characters long.",
       "string.max": "Username must not exceed 30 characters.",
       "any.required": "Username must be provided."
-    })
+    }),
+  token: Joi.string().required().messages({
+    "string.base": "Error reconnecting.",
+    "string.empty": "Error reconnecting.",
+    "any.required": "Error reconnecting."
+  }),
 }).options({ abortEarly: false });
 
-export default userJoinSchema;
+export default userRejoinSchema;

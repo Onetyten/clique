@@ -46,10 +46,10 @@ const mobileSidebarCloser = document.getElementById("mobile-sidebar-closer");
 const pulser = document.getElementById("pulser")
 
 window.addEventListener('DOMContentLoaded',async()=>{ 
-    console.log(roomName)
     if (room && user) {
-        socket.emit("joinClique", {cliqueKey: room.clique_key,
-            username: user.name, isFirstConn: false
+        console.log(room.token)
+        socket.emit("rejoinClique", {cliqueName: room.name,
+            username: user.name, token:room.token
         });
     }
     if (user && user.role === 2) { 
@@ -58,6 +58,14 @@ window.addEventListener('DOMContentLoaded',async()=>{
         document.getElementById("question-Button").classList.add("flex");
     }
     getMemberList()
+})
+
+socket.on("Boot Out",(data)=>{
+    toastr.warning(data.message || "Please, rejoin this room");
+    console.log("Booted out")
+    setTimeout(() => {
+        window.location.href = "/"
+    }, 1500);
 })
 
 async function getMemberList () {
@@ -98,7 +106,11 @@ async function getMemberList () {
     } 
     catch (error) {
         console.log('error fetching members',error)
-        return toastr.error('error fetching members')
+        console.log("You are removed")
+        toastr.error("You are removed");
+        setTimeout(() => {
+            window.location.href = "/"
+        }, 1500);
     }
 }
 

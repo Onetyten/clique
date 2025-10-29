@@ -22,7 +22,8 @@ async function HandleCreateRoom(){
     const cliqueName = cliqueInput.value
     const cliqueKey = cliqueKeyInput.value
     if (username.trim().length==0) return toastr.warning(`Pls provide a name to create a clique`)
-    if (cliqueKey.trim().length==0) return toastr.warning(`Pls provide a key to create a clique`)
+    if (cliqueKey.trim().length==0) return toastr.warning(`Pls provide a key`)
+    if (cliqueName.trim().length==0) return toastr.warning(`What do you want to name your Clique`)
     spinnerContainer.classList.remove("hidden");
     spinnerContainer.classList.add("flex");
     createButtonEl.disabled = true;
@@ -60,15 +61,16 @@ socket.on("midSessionError", (data) => {
 
 
 async function HandleJoinRoom(){
-    const isFirstConn = true
     const username = nameInput.value
+    const cliqueName = cliqueInput.value
     const cliqueKey = cliqueKeyInput.value
     if (username.trim().length==0) return toastr.warning(`Pls provide a name to join a clique`)
-    if (cliqueKey.trim().length==0) return toastr.warning(`Pls provide a key to join a clique`)
+    if (cliqueKey.trim().length==0) return toastr.warning(`Pls provide a key`)
+    if (cliqueName.trim().length==0) return toastr.warning(`Pls provide a Clique name`)
     spinnerContainer.classList.remove("hidden");
     spinnerContainer.classList.add("flex");
     joinButtonEl.disabled = true;
-    socket.emit("joinClique",{cliqueKey,username,isFirstConn})
+    socket.emit("joinClique",{cliqueKey,username,cliqueName})
 }
 
 socket.on("JoinedClique", (data) => {

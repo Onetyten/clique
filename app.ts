@@ -13,7 +13,8 @@ import { handleAskQuestion } from './handlers/AskQuestion.handler';
 import { WrongAnswerMessage } from './handlers/incorrectAnswer.handler';
 import { CacheRoleIDs } from './cache/cacheRoleID';
 import { handleSessionOver } from './handlers/handleSessionOver';
-import { scorchedEarth } from './handlers/endClique.handler';
+import { handleDisconnect } from './handlers/disconnectHandler';
+import { handleRejoinClique } from './handlers/rejoinClique.handler';
 
 
 const rootDir = path.basename(__dirname) === "dist"?path.join(__dirname,".."):__dirname
@@ -59,33 +60,12 @@ io.on("connection",(socket:Socket)=>{
     console.log("A user connected",socket.id)
     socket.on("CreateClique",(data)=>handleCreateClique(socket,data,socketUserMap))
     socket.on("joinClique",(data)=>handleJoinClique(socket,data,socketUserMap))
+    socket.on("rejoinClique",(data)=>handleRejoinClique(socket,data,socketUserMap))
     socket.on("ChatMessage",(data)=>handleChatMessage(socket,data))
     socket.on("answeredIncorrectly",(data)=>WrongAnswerMessage(socket,data))
     socket.on("askQuestion",(data)=>handleAskQuestion(socket,data))
     socket.on("sessionOver",(data)=>handleSessionOver(io,socket,data))
-
-    socket.on("disconnect",async (reason)=>{
-        console.log(`User disconnected:, ${socket.id} due to ${reason}`)
-        const userData = socketUserMap.get(socket.id)
-        socketUserMap.delete(socket.id)
-        if (!userData) return
-        const { roomId } = userData
-        const availableMembers = [...socketUserMap.values()].filter(member=>member.roomId === roomId)
-        if (availableMembers.length === 0){
-            console.log(`Room ${roomId} is empty waiting 120 seconds before cleanup...`)
-            setTimeout(async()=>{
-                const finalMemberCheck = [...socketUserMap.values()].filter(member=>member.roomId === roomId)
-                if (finalMemberCheck.length === 0){
-                    console.log(`Scorched Earth! Cleaning up room ${roomId}`)
-                    await scorchedEarth(roomId)
-                }
-                else{
-                    console.log(`Room ${roomId} was repopulated. Skipping cleanup.`)
-                }
-            },120000)
-        }
-
-    })
+    socket.on("disconnect",async (reason)=>handleDisconnect(socket,reason,socketUserMap,))
 })
 
 server.listen(port,()=>{

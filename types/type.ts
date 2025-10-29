@@ -14,7 +14,7 @@ export interface UserType {
 
 export interface RoomType {
   id: string;
-  clique_key: string;
+  token?:string
   name: string;
   created_at: string;
 }
