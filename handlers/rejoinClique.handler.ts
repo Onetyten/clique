@@ -2,9 +2,9 @@ import dotenv from "dotenv"
 dotenv.config()
 import { Socket } from "socket.io";
 import pool from "../config/pgConnect";
-import redis from "../config/redisConfig";
 import jwt from "jsonwebtoken"
 import userRejoinSchema from "../validation/rejoinRoom.validation";
+import { roleID } from "../config/role";
 
 interface InputType{
     cliqueName:string,
@@ -32,14 +32,16 @@ isAdmin: boolean;}>){
             return socket.emit("Boot Out",{message:"Please, rejoin this room"});
         }
         const name = username.toLowerCase()
-        let adminId = parseInt(await redis.get('adminId')|| "2",10)
-        let guestId = parseInt(await redis.get('guestId')|| "1",10)
+        let adminId = roleID.admin
+
+
         try {
             const roomExists = await pool.query('SELECT * FROM rooms WHERE name = $1',[cliqueName]);      
             if (roomExists.rows.length === 0){
                 console.log('This room does not exist');
                 return socket.emit("Error", { message: "This clique does not exist" });
             }
+            
             const room = roomExists.rows[0]
             const roomName = room.name
             const roomId = room.id;
@@ -48,20 +50,19 @@ isAdmin: boolean;}>){
                 return socket.emit("Error", { message: "Error reconnecting" });
             }
             const newUser = existingUser.rows[0];
-            const colorId = newUser.color_id;
             const gmExists = await pool.query('SELECT id FROM members WHERE room_id = $1 AND role = $2 ',[roomId,adminId])
             if (gmExists.rows.length === 0){
                 await pool.query('UPDATE members SET role = $1 WHERE id = $2 AND NOT EXISTS (SELECT 1 FROM members WHERE room_id = $3 and role = $1 )',[adminId,newUser.id,roomId])
             }
-            const colorHexTable = await pool.query('SELECT * FROM colors WHERE id=$1',[colorId])
-            const colorHex =colorHexTable.rows[0]
+
             console.log(`user ${name} has been added into clique ${roomName}`);
             socket.join(roomId);
             socket.emit("JoinedClique", {
-                message: `Successfully joined ${roomName} `, room:roomExists.rows[0],user: newUser,colorHex
+                message: `Successfully joined ${roomName} `, room:roomExists.rows[0],user: newUser
             });
+
             socketUserMap.set(socket.id,{userId:newUser.id,roomId,isAdmin:newUser.role === 2})
-            return socket.to(roomId).emit("userJoined",{ message:`${username} has joined the room`,newUser,colorHex})
+            return socket.to(roomId).emit("userJoined",{ message:`${username} has joined the room`,newUser})
         }
         catch (error:any) {
             console.error("Failed to join clique",error);

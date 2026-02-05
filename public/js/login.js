@@ -39,7 +39,7 @@ function handleLogin(data){
     sessionStorage.setItem('user', JSON.stringify(user));
     sessionStorage.setItem('color', JSON.stringify(color));
     toastr.success(data.message);
-    window.location.href = `/room?index=${encodeURIComponent(room.name)}`;
+    window.location.href = `/v1/room?index=${encodeURIComponent(room.name)}`;
 }
 
 socket.on("CliqueCreated", (data) => {

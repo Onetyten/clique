@@ -1,9 +1,10 @@
 import { Socket } from "socket.io";
 import pool from "../config/pgConnect";
 import userJoinSchema from "../validation/joinRoom.validation";
-import redis from "../config/redisConfig";
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken";
+import { roleID } from "../config/role";
+import { HexCodes } from "../config/hexCodes";
 
 interface InputType{
     cliqueKey:string,
@@ -24,8 +25,8 @@ isAdmin: boolean;}>){
         }
         console.log(`request from ${username} to join clique acknowledged`)
         const name = username.toLowerCase()
-        let guestId = parseInt(await redis.get('guestId')|| "1",10);
-        let adminId = parseInt(await redis.get('adminId')|| "2",10)
+        let guestId = roleID.guest
+        let adminId = roleID.admin
         try {
             const roomExists = await pool.query('SELECT * FROM rooms WHERE name = $1',[cliqueName]);      
             if (roomExists.rows.length === 0){
@@ -38,7 +39,6 @@ isAdmin: boolean;}>){
                 return socket.emit("Error", { message: "Incorrect key" });
             }
             let newUser;
-            let colorHex;
             const roomName = roomExists.rows[0].name;
             const roomId = roomExists.rows[0].id;
             const nameExists = await pool.query('SELECT * FROM members WHERE name = $1 AND room_id = $2',[name,roomId]);
@@ -61,30 +61,27 @@ isAdmin: boolean;}>){
                 }
                 else{
                     newUser = nameExists.rows[0];
-                    const colorId = newUser.color_id
                     const gmExists = await pool.query('SELECT id FROM members WHERE room_id = $1 AND role = $2 ',[roomId,adminId])
                     if (gmExists.rows.length === 0){
                         await pool.query('UPDATE members SET role = $1 WHERE id = $2 AND NOT EXISTS (SELECT 1 FROM members WHERE room_id = $3 and role = $1 )',[adminId,newUser.id,roomId])
                     }
-                    const colorHexTable = await pool.query("SELECT * from colors WHERE id=$1",[colorId])
-                    colorHex =colorHexTable.rows[0]
+
                 }
             }
             else{
-                const colorResult = await pool.query(`SELECT * FROM colors ORDER BY random() LIMIT 1`);
-                const colorId = colorResult.rows[0].id;
-                const newUserResult = await pool.query('INSERT INTO members (name, room_id, role, color_id) VALUES($1,$2,$3,$4) RETURNING *',[name,roomId,guestId,colorId]);
+                const colorIndex = (Math.floor(Math.random() * HexCodes.length))
+                const color = HexCodes[colorIndex]
+                const newUserResult = await pool.query('INSERT INTO members (name, room_id, role, hex_code ) VALUES($1,$2,$3,$4) RETURNING *',[name,roomId,guestId,color]);
                 newUser = newUserResult.rows[0];
-                colorHex =colorResult.rows[0]
             }
             const payload = {id:newUser.id}
             const token  = jwt.sign(payload,secret)
             const {clique_key, ...newRoom} = {...roomExists.rows[0],token}
             console.log(`user ${name} has been added into clique ${roomName}`);
             socket.join(roomId.toString());
-            socket.emit("JoinedClique", { message: `Successfully joined ${roomName} `, room:newRoom,user: newUser,colorHex});
+            socket.emit("JoinedClique", { message: `Successfully joined ${roomName} `, room:newRoom,user: newUser});
             socketUserMap.set(socket.id,{userId:newUser.id,roomId,isAdmin:newUser.role === 2})
-            return socket.to(roomId).emit("userJoined",{ message:`${username} has joined the room`,newUser,colorHex})
+            return socket.to(roomId).emit("userJoined",{ message:`${username} has joined the room`,newUser})
         }
         catch (error:any) {
             console.error("Failed to join clique",error);

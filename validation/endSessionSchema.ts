@@ -16,9 +16,8 @@ const sessionSchema = Joi.object({
         name: Joi.string().required(),
         role: Joi.number().integer().required(),
         room_id: Joi.string().guid({version:'uuidv4'}).required(),
-        color_id:Joi.number().integer().optional(),
+        hex_code:Joi.string().optional(),
         joined_at: Joi.date().optional(),
-        color_hex: Joi.string().optional(),
         score: Joi.number().integer().optional(),
         was_gm: Joi.boolean()
     }

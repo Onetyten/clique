@@ -8,7 +8,7 @@ export interface UserType {
   name: string;
   role: number;
   room_id: string;
-  color_id: number;
+  hex_code: string;
   joined_at: string;
 }
 
