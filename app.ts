@@ -26,7 +26,6 @@ app.use(express.static(path.join(rootDir,"public")))
 app.use(express.static(path.join(rootDir,"client","dist")))
 app.set("view engine","ejs")
 app.set("views",path.join(rootDir,"views"))
-
 CacheRoleIDs()
 
 app.get("/v1",(req,res)=>{
