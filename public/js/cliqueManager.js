@@ -64,7 +64,7 @@ socket.on("Boot Out",(data)=>{
     toastr.warning(data.message || "Please, rejoin this room");
     console.log("Booted out")
     setTimeout(() => {
-        window.location.href = "/"
+        window.location.href = "/v1"
     }, 1500);
 })
 
@@ -109,7 +109,7 @@ async function getMemberList () {
         console.log("You are removed")
         toastr.error("You are removed");
         setTimeout(() => {
-            window.location.href = "/"
+            window.location.href = "/v1"
         }, 1500);
     }
 }

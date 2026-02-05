@@ -16,8 +16,12 @@ export async function fetchGuests(req:Request,res:Response) {
     }
     console.log("Room name from params:", req.params.roomName);
     const {roomName} = value
+    
     try{
-        const memberTable = await pool.query('SELECT m.*,c.hexcode AS color_hex FROM members m INNER JOIN rooms r ON m.room_id = r.id LEFT JOIN colors c ON m.color_id = c.id WHERE r.name = $1',[roomName])
+        const memberTable = await pool.query(`SELECT m.*,
+            FROM members m INNER JOIN rooms r ON m.room_id = r.id
+            WHERE r.name = $1`,
+        [roomName])
         if (memberTable.rows.length==0){
             console.log('There is no one in this clique')
             return res.status(404).json({message:'There is no one in this clique'})

@@ -11,7 +11,6 @@ import fetchGuestRoute from './routes/guest/fetchGuests.route'
 import { handleChatMessage } from './handlers/chatMessage.handler';
 import { handleAskQuestion } from './handlers/AskQuestion.handler';
 import { WrongAnswerMessage } from './handlers/incorrectAnswer.handler';
-import { CacheRoleIDs } from './cache/cacheRoleID';
 import { handleSessionOver } from './handlers/handleSessionOver';
 import { handleDisconnect } from './handlers/disconnectHandler';
 import { handleRejoinClique } from './handlers/rejoinClique.handler';
@@ -26,7 +25,6 @@ app.use(express.static(path.join(rootDir,"public")))
 app.use(express.static(path.join(rootDir,"client","dist")))
 app.set("view engine","ejs")
 app.set("views",path.join(rootDir,"views"))
-CacheRoleIDs()
 
 app.get("/v1",(req,res)=>{
     res.render("index")
@@ -46,6 +44,7 @@ app.use('/room',fetchGuestRoute)
 app.get(/.*/,(req:Request,res:Response)=>{
     res.sendFile(path.join(rootDir,"client","dist","index.html"))
 })
+
 
 
 const port = process.env.PORT 

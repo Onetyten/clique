@@ -3,6 +3,7 @@ import { sessionType, UserType } from "../types/type";
 import sessionSchema from "../validation/endSessionSchema";
 import pool from "../config/pgConnect";
 import redis from "../config/redisConfig";
+import { roleID } from "../config/role";
 
 
 interface propTypes{
@@ -26,10 +27,9 @@ export async function handleSessionOver(io:Server,socket:Socket,{currentSession,
             }
             await pool.query(`UPDATE sessions SET is_active=false WHERE id = $1`,[currentSession.id])
             const addedScore = 10
-            const guestID = parseInt(await redis.get('guestId') || "1", 10)
-            const adminId = parseInt(await redis.get('adminId') || "2", 10)
-            console.log("adminId", adminId, typeof adminId);
-            console.log("guestID", guestID, typeof guestID);
+            const guestID = roleID.guest
+            const adminId = roleID.guest
+            
             await pool.query(`UPDATE members SET role = $1 WHERE id = $2`,[guestID,currentSession.gm_id])
             console.log("oldGm id",currentSession.gm_id)
             let newGMTable = await pool.query('SELECT * FROM members WHERE room_id = $1 AND was_gm IS false ORDER  BY RANDOM () LIMIT 1',[currentSession.room_id])
