@@ -4,7 +4,7 @@
   "main": "dist/app.js",
   "scripts": {
     "dev": "nodemon --exec ts-node app.ts",
-    "build": "npm install && tsc",
+    "build": "tsc && cd client && npm install && npm run build && cd .. && npm install",
     "start": "node dist/app.js",
     "lint": "eslint",
     "type-check": "tsc --noEmit",
