@@ -35,7 +35,8 @@ isAdmin: boolean;}>){
             const hashedKey = await bcrypt.hash(cliqueKey,salt)
             const roomExists = await pool.query('SELECT id from rooms WHERE name=$1',[cliqueName])
             if (roomExists.rows.length>0){
-                return socket.emit("Error", { message: "This Clique name has already been taken" });
+                console.log("This Clique name has already been taken")
+                return socket.emit("Error", { message: "This Clique name has already been taken" }); 
             }
             const createdRoom = await pool.query('INSERT INTO rooms (id,clique_key,name) VALUES (gen_random_uuid(),$1,$2) RETURNING * ',[hashedKey, cliqueName]);
             const roomId = createdRoom.rows[0].id;
@@ -53,10 +54,12 @@ isAdmin: boolean;}>){
             socket.to(roomId).emit("userJoined",{ message:`${savedName} has joined the room`, savedName})
             console.log( `clique ${roomName} created by ${savedName}`);
             console.log("New room",newRoom)
-            return socket.emit("CliqueCreated",{message:'Clique created',room:newRoom,user:newUser})
+            socket.emit("CliqueCreated",{message:'Clique created',room:newRoom,user:newUser})
+            return
         }
         catch (error:any) {
             if (error.code === "23505") {
+                console.error("This Clique name has already been taken")
                 return socket.emit("Error", { message: "This Clique name has already been taken" });
             }
             console.error("Failed to create clique",error);
