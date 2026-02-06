@@ -14,6 +14,7 @@ import { WrongAnswerMessage } from './handlers/incorrectAnswer.handler';
 import { handleSessionOver } from './handlers/handleSessionOver';
 import { handleDisconnect } from './handlers/disconnectHandler';
 import { handleRejoinClique } from './handlers/rejoinClique.handler';
+import { handleValidateToken } from './handlers/handleValidateToken.handler';
 
 
 const rootDir = path.basename(__dirname) === "dist"?path.join(__dirname,".."):__dirname
@@ -66,6 +67,7 @@ io.on("connection",(socket:Socket)=>{
     socket.on("CreateClique",(data)=>handleCreateClique(socket,data,socketUserMap))
     socket.on("joinClique",(data)=>handleJoinClique(socket,data,socketUserMap))
     socket.on("rejoinClique",(data)=>handleRejoinClique(socket,data,socketUserMap))
+    socket.on("validateToken",(data)=>handleValidateToken(socket,data,socketUserMap))
     socket.on("ChatMessage",(data)=>handleChatMessage(socket,data))
     socket.on("answeredIncorrectly",(data)=>WrongAnswerMessage(socket,data))
     socket.on("askQuestion",(data)=>handleAskQuestion(socket,data))

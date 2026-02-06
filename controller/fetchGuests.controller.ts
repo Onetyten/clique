@@ -18,7 +18,8 @@ export async function fetchGuests(req:Request,res:Response) {
     const {roomName} = value
     
     try{
-        const memberTable = await pool.query(`SELECT m.*,
+        const memberTable = await pool.query(
+            `SELECT m.*
             FROM members m INNER JOIN rooms r ON m.room_id = r.id
             WHERE r.name = $1`,
         [roomName])
