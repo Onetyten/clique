@@ -30,7 +30,6 @@ isAdmin: boolean;}>){
         }
         try {
             let adminRoleId =  roleID.admin
-
             const salt = await bcrypt.genSalt(10)
             const hashedKey = await bcrypt.hash(cliqueKey,salt)
             const roomExists = await pool.query('SELECT id from rooms WHERE name=$1',[cliqueName])

@@ -3,16 +3,16 @@ import {Spinner} from "react-activity"
 import "react-activity/dist/library.css"
 import { toast } from "react-toastify"
 import { socket } from "../../util/socket"
-import useSocketListeners from "../../hooks/useLoginSocketListeners"
-
+import { useSocketContext } from "../../SocketContext"
+import useLoginSocketListeners from "../../hooks/useLoginSocketListeners"
 
 
 export default function Login() {
     const [username,setUserName] = useState("")
     const [cliqueName,setCliqueName] = useState("")
     const [cliqueKey,setCliqueKey] = useState("")
-    const {loading,setLoading} = useSocketListeners()
-    
+    const {loading,setLoading} = useSocketContext()
+    useLoginSocketListeners(setLoading)
 
     async function HandleJoinRoom(){
         if (username.trim().length==0) return toast.warn(`Pls provide a name to join a clique`)
@@ -21,7 +21,7 @@ export default function Login() {
         setLoading(true)
         socket.emit("joinClique",{cliqueKey,username,cliqueName})
     }
-    
+
     async function HandleCreateRoom(){
         if (username.trim().length==0) return toast.warn(`Pls provide a name to create a clique`)
         if (cliqueKey.trim().length==0) return toast.warn(`Pls provide a key`)
@@ -29,7 +29,6 @@ export default function Login() {
         setLoading(true)
         socket.emit("CreateClique",{cliqueKey,username,cliqueName})
     }
-
 
   return (
     <div className="bg-background-100 min-h-dvh flex justify-center items-center">

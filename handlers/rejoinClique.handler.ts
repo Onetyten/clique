@@ -12,7 +12,6 @@ interface InputType{
     token:string
 }
 
-
 export async function handleRejoinClique(socket:Socket,{cliqueName,username,token}:InputType,socketUserMap:Map<string,{userId: string; roomId: string;
 isAdmin: boolean;}>){
         const secret = process.env.JWT_SECRET

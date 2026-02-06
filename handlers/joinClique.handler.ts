@@ -27,10 +27,24 @@ isAdmin: boolean;}>){
         const name = username.toLowerCase()
         let guestId = roleID.guest
         let adminId = roleID.admin
+
+        async function handleRoomSwitch( socket: Socket, existingUser: { userId: string; roomId: string; isAdmin: boolean },socketUserMap: Map<string, any>) {
+            const { userId, roomId, isAdmin } = existingUser
+            socket.leave(roomId)
+
+            if (isAdmin) { await reassignAdmin(roomId, userId)}
+
+            await pool.query( "DELETE FROM members WHERE id = $1 AND room_id = $2", [userId, roomId])
+
+            socketUserMap.delete(socket.id)
+            socket.to(roomId).emit("userLeft", { message:`${username} has left the clique`})
+        }
+
+
         try {
             const roomExists = await pool.query('SELECT * FROM rooms WHERE name = $1',[cliqueName]);      
             if (roomExists.rows.length === 0){
-                console.log('This room does not exist');
+                console.log(`User ${username} tried to join inexistant room ${cliqueName}`);
                 return socket.emit("Error", { message: "This clique does not exist" });
             }
             const isPasswordCorrect = await bcrypt.compare(cliqueKey,roomExists.rows[0].clique_key)
@@ -38,6 +52,12 @@ isAdmin: boolean;}>){
                 console.log('Incorrect password');
                 return socket.emit("Error", { message: "Incorrect key" });
             }
+
+            const existingUser = socketUserMap.get(socket.id)
+            if (existingUser) {
+                await handleRoomSwitch(socket, existingUser, socketUserMap)
+            }
+
             let newUser;
             const roomName = roomExists.rows[0].name;
             const roomId = roomExists.rows[0].id;
@@ -55,6 +75,7 @@ isAdmin: boolean;}>){
                         break;
                     }
                 }
+
                 if (connected){
                     console.log(`sorry, user ${name} already exists in this clique, please choose another name`);
                     return socket.emit("Error", { message: `user ${name} already exists in this clique choose another name` })  
@@ -80,7 +101,10 @@ isAdmin: boolean;}>){
             console.log(`user ${name} has been added into clique ${roomName}`);
             socket.join(roomId.toString());
             socket.emit("JoinedClique", { message: `Successfully joined ${roomName} `, room:newRoom,user: newUser});
+
             socketUserMap.set(socket.id,{userId:newUser.id,roomId,isAdmin:newUser.role === 2})
+
+
             return socket.to(roomId).emit("userJoined",{ message:`${username} has joined the room`,newUser})
         }
         catch (error:any) {
