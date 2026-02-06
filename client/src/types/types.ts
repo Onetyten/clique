@@ -15,6 +15,17 @@ export interface userType {
     was_gm: boolean
 }
 
+export interface MemberType {
+  id: string;
+  joined_at: string;
+  name: string;
+  room_id: string;
+  role: number;
+  hex_code: string;
+  score: number;
+  was_gm: boolean;
+}
+
 export interface loginDataType{
   message: string,
   room: roomType

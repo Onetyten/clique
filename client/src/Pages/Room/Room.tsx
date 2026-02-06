@@ -3,29 +3,32 @@ import { useState } from "react";
 import Sidebar from "./Components/Sidebar";
 import Banner from "./Components/Banner";
 import {PanelRight} from "lucide-react"
+import { useSelector } from "react-redux";
+import type { RootState } from "../../util/store";
+import useRoomSocketListeners from "../../hooks/useRoomSocketListeners";
 
 
 
 export default function Room() {
     const [showBanner,setShowBanner] = useState(false)
     const [bannerVal,setBannerVal] = useState(0)
+    const user = useSelector((state:RootState)=>state.user.user)
+    const room = useSelector((state:RootState)=>state.room.room)
+    const {friendList} = useRoomSocketListeners()
 
 
-  return (
+return (
   <main className="bg-background-100 w-screen max-w-screen h-dvh flex">
 
-    <Sidebar/>
+    <Sidebar friendList={friendList}/>
     {showBanner && <Banner bannerVal={bannerVal}/>}
-
-
-
 
 
     <div className="hide-scrollbar relative min-h-dvh flex-1 flex flex-col w-full">
 
         <div className="w-full bg-background text-text-primary flex items-center justify-start gap-3 lg:hidden p-3"> 
             <PanelRight className="text-accent-blue cursor-pointer text-2xl" />
-            <p id="roomName"></p>
+            <p id="roomName">{room?.name.slice(0,1)}</p>
         </div>
 
         <div id="game-question-container" className="bg-background-100 sm:text-base text-sm text-white w-full hidden justify-between items-center border-b-2 border-background-200 gap-6 p-3 sm:p-6">

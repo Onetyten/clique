@@ -1,37 +1,50 @@
 
 import { useSelector } from 'react-redux'
-import { useSearchParams } from 'react-router'
 import type { RootState } from '../../../util/store'
+import type { MemberType } from '../../../types/types'
 
-export default function Sidebar() {
-    const [searchParams] = useSearchParams()
-    const roomName = searchParams.get("index")
+
+interface propType{
+    friendList:MemberType[]
+}
+
+export default function Sidebar({friendList}:propType) {
     const user = useSelector((state:RootState)=>state.user.user)
     const room = useSelector((state:RootState)=>state.room.room)
-    console.log(room,user)
-
 
   return (
-    <div>
-        <div id="sidebar" className="w-64 transition-all duration-300 text-text-primary hidden lg:flex flex-col items-start justify-start bg-background hide-scrollbar min-h-dvh overflow-y-scroll">
-                <div id="sidebar-head" className="mb-3 p-6 text-2xl  w-full gap-6 flex justify-between items-baseline">
-                    <p id="roomName">{room?.name} </p>
-                    <i id="toggleSidebar" className="fa-solid fa-bars text-base cursor-pointer"></i>
-                </div>  
-                <div className="w-full memberListContainer p-3 flex flex-col gap-4">
-                </div>
-        </div>
+    <div className="w-64 transition-all duration-300 text-text-primary hidden lg:flex flex-col items-start justify-start bg-background hide-scrollbar min-h-dvh overflow-y-scroll">
+        <div id="sidebar-head" className="mb-3 p-6 text-2xl  w-full gap-6 flex justify-between items-baseline">
+            <p id="roomName">{room?.name}</p>
+            <i id="toggleSidebar" className="fa-solid fa-bars text-base cursor-pointer"></i>
+        </div>  
+        <div className="w-full p-3 flex flex-col gap-4">
+            {friendList.map((item,index)=>{
+                return(
+                    <div key={index} className="flex justify-between  text-sm 2xl:text-base items-center w-full">
+                        <div className="flex gap-2 justify-center items-center">
+                            <div style={{backgroundColor:item.hex_code}} className="w-10 h-10 capitalize rounded-full flex justify-center items-center text-white">
+                                {item.name.slice(0,1)}
+                            </div>
+                            <div className="flex  flex-col gap-2">
+                                <p className="capitalize">{item.name}</p>
+                                <p className="text-accent-blue">{item.score || 0} pts</p>
+                            </div>
+                        </div>
 
-        <div id="mobile-sidebar" className="fixed text-text-primary inset-0 hidden z-60 lg:hidden">
-            <div className="w-8/12 sm:w-64 bg-background min-h-dvh overflow-y-scroll hide-scrollbar">
-                <div id="sidebar-head" className="mb-3 p-3 text-xl font-bold w-full gap-3 flex justify-between items-baseline">
-                <p id="roomName">{roomName}</p>
-                </div>
-                <div className="memberListContainer w-full p-3 flex flex-col gap-4"></div>
-            </div>
-            <div id="mobile-sidebar-closer" className="flex-1 h-full bg-background/40 backdrop-blur-md"></div>
-        </div> 
+                        <div className="flex gap-2 items-center hideOnCollapse">
+                            { user && item.id === user.id &&
+                                <div className="w-3 h-3 bg-accent-green rounded-full"></div>
+                            }
+                            {  item.role === 0 && 
+                                <div className="text-xs 2xl:text-sm text-white px-2 bg-accent-blue rounded-sm">GM</div>
+                            }
+                        </div>
+                        
+                    </div>
+                )
+            })}
+        </div>
     </div>
-   
   )
 }

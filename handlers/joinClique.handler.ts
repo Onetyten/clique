@@ -5,6 +5,8 @@ import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken";
 import { roleID } from "../config/role";
 import { HexCodes } from "../config/hexCodes";
+import { assignNextAdmin } from "../services/admin.service";
+import { PoolClient } from "pg";
 
 interface InputType{
     cliqueKey:string,
@@ -27,43 +29,54 @@ isAdmin: boolean;}>){
         const name = username.toLowerCase()
         let guestId = roleID.guest
         let adminId = roleID.admin
+        const client = await pool.connect()
+        
+        
 
-        async function handleRoomSwitch( socket: Socket, existingUser: { userId: string; roomId: string; isAdmin: boolean },socketUserMap: Map<string, any>) {
+        async function handleRoomSwitch(client:PoolClient, socket: Socket, existingUser: { userId: string; roomId: string; isAdmin: boolean },socketUserMap: Map<string, any>) {
             const { userId, roomId, isAdmin } = existingUser
             socket.leave(roomId)
+            let NewAdmin;
+            if (isAdmin) {
+                NewAdmin = await assignNextAdmin(client,roomId,userId)
+            }
 
-            if (isAdmin) { await reassignAdmin(roomId, userId)}
-
-            await pool.query( "DELETE FROM members WHERE id = $1 AND room_id = $2", [userId, roomId])
+            await client.query( `DELETE FROM members WHERE id = $1 AND room_id = $2`,[userId, roomId])
 
             socketUserMap.delete(socket.id)
-            socket.to(roomId).emit("userLeft", { message:`${username} has left the clique`})
+
+            socket.to(roomId).emit("userLeft", { message:`${username} has left the clique,${NewAdmin?`The new admin is ${NewAdmin.name}`:""}`})
         }
 
-
         try {
-            const roomExists = await pool.query('SELECT * FROM rooms WHERE name = $1',[cliqueName]);      
+            await client.query("BEGIN")
+            const roomExists = await client.query('SELECT * FROM rooms WHERE name = $1',[cliqueName]);      
             if (roomExists.rows.length === 0){
+
+                await client.query("ROLLBACK")
                 console.log(`User ${username} tried to join inexistant room ${cliqueName}`);
                 return socket.emit("Error", { message: "This clique does not exist" });
             }
             const isPasswordCorrect = await bcrypt.compare(cliqueKey,roomExists.rows[0].clique_key)
             if (!isPasswordCorrect){
+                await client.query("ROLLBACK")
                 console.log('Incorrect password');
                 return socket.emit("Error", { message: "Incorrect key" });
             }
 
             const existingUser = socketUserMap.get(socket.id)
             if (existingUser) {
-                await handleRoomSwitch(socket, existingUser, socketUserMap)
+                await handleRoomSwitch(client,socket, existingUser, socketUserMap)
             }
 
             let newUser;
             const roomName = roomExists.rows[0].name;
             const roomId = roomExists.rows[0].id;
-            const nameExists = await pool.query('SELECT * FROM members WHERE name = $1 AND room_id = $2',[name,roomId]);
-            const isSessionActive = await pool.query('SELECT is_active,end_time FROM sessions WHERE room_id=$1 AND is_active IS true',[roomId])
+            const nameExists = await client.query('SELECT * FROM members WHERE name = $1 AND room_id = $2',[name,roomId]);
+            const isSessionActive = await client.query('SELECT is_active,end_time FROM sessions WHERE room_id=$1 AND is_active IS true',[roomId])
+
             if (isSessionActive.rows.length>0){
+                await client.query("COMMIT")
                 const timeLeft = Math.floor((new Date(isSessionActive.rows[0].end_time).getTime() - Date.now())/1000)
                 return socket.emit("midSessionError", { message: `A session is currently going on in room ${roomName}, rejoin in ${timeLeft}s`, timeLeft})
             }
@@ -77,25 +90,30 @@ isAdmin: boolean;}>){
                 }
 
                 if (connected){
+                    await client.query("COMMIT")
                     console.log(`sorry, user ${name} already exists in this clique, please choose another name`);
                     return socket.emit("Error", { message: `user ${name} already exists in this clique choose another name` })  
                 }
                 else{
                     newUser = nameExists.rows[0];
-                    const gmExists = await pool.query('SELECT id FROM members WHERE room_id = $1 AND role = $2 ',[roomId,adminId])
+                    const gmExists = await client.query('SELECT id FROM members WHERE room_id = $1 AND role = $2 ',[roomId,adminId])
                     if (gmExists.rows.length === 0){
-                        await pool.query('UPDATE members SET role = $1 WHERE id = $2 AND NOT EXISTS (SELECT 1 FROM members WHERE room_id = $3 and role = $1 )',[adminId,newUser.id,roomId])
+                        await client.query('UPDATE members SET role = $1 WHERE id = $2 AND NOT EXISTS (SELECT 1 FROM members WHERE room_id = $3 and role = $1 )',[adminId,newUser.id,roomId])
                     }
 
                 }
             }
-            else{
+
+            else {
                 const colorIndex = (Math.floor(Math.random() * HexCodes.length))
                 const color = HexCodes[colorIndex]
-                const newUserResult = await pool.query('INSERT INTO members (name, room_id, role, hex_code ) VALUES($1,$2,$3,$4) RETURNING *',[name,roomId,guestId,color]);
+                const newUserResult = await client.query('INSERT INTO members (name, room_id, role, hex_code ) VALUES($1,$2,$3,$4) RETURNING *',[name,roomId,guestId,color]);
                 newUser = newUserResult.rows[0];
             }
-            const payload = {id:newUser.id}
+
+            await client.query("COMMIT")
+
+            const payload = {id:newUser.id,roomId: newUser.room_id}
             const token  = jwt.sign(payload,secret)
             const {clique_key, ...newRoom} = {...roomExists.rows[0],token}
             console.log(`user ${name} has been added into clique ${roomName}`);
@@ -103,12 +121,14 @@ isAdmin: boolean;}>){
             socket.emit("JoinedClique", { message: `Successfully joined ${roomName} `, room:newRoom,user: newUser});
 
             socketUserMap.set(socket.id,{userId:newUser.id,roomId,isAdmin:newUser.role === 2})
-
-
             return socket.to(roomId).emit("userJoined",{ message:`${username} has joined the room`,newUser})
         }
         catch (error:any) {
+            await client.query("ROLLBACK")
             console.error("Failed to join clique",error);
             return socket.emit("Error", { message: "Failed to join clique due to an error, please try again" });
+        }
+        finally {
+            client.release()
         }
     }
