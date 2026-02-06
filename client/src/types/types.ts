@@ -20,3 +20,9 @@ export interface loginDataType{
   room: roomType
   user:userType
 }
+
+export interface messageType {
+    id:string
+    value:string,
+    type: "chat" | "question" | "correct" | "wrong"
+}

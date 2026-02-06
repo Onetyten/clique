@@ -1,33 +1,31 @@
-import { useEffect, useState } from "react"
+import React, { useEffect } from "react"
 import { socket } from "../util/socket"
 import { toast } from "react-toastify"
 import type { loginDataType } from "../types/types"
-// import { useNavigate } from "react-router"
+import {useDispatch} from "react-redux"
+import { setUser } from "../store/userSlice"
+import { setRoom } from "../store/roomSlice"
+import { useNavigate } from "react-router"
 
 
-
-export default function useSocketListeners(){
-    const [loading,setLoading] = useState(false)
-    // const navigate = useNavigate()
+export default function useLoginSocketListeners(setLoading:React.Dispatch<React.SetStateAction<boolean>>){
+    const dispatch = useDispatch()
+    const navigate = useNavigate()
 
     function handleLogin(data:loginDataType){
+        if (!data) return
         setLoading(false)
-        console.log('data',data)
-        // const room  = data.room;
-        // const user = data.user;
-        // const color = data.colorHex
-        // sessionStorage.setItem('room', JSON.stringify(room));
-        // sessionStorage.setItem('user', JSON.stringify(user));
-        // sessionStorage.setItem('color', JSON.stringify(color));
+        dispatch(setUser(data.user))
+        dispatch(setRoom(data.room))
         toast.success(data.message);
-        // navigate(`/room?index=${encodeURIComponent(room.name)}`)
+        navigate(`/room?index=${encodeURIComponent(data.room.name)}`)
     }
 
     useEffect(()=>{
         if (!socket.connected) socket.connect()
-        socket.on("CliqueCreated", (data) => handleLogin(data));
+        socket.on("CliqueCreated", handleLogin);
 
-        socket.on("JoinedClique", (data) => handleLogin(data));
+        socket.on("JoinedClique", handleLogin);
 
         socket.on("midSessionError", (data) => {
             setLoading(false)
@@ -37,20 +35,13 @@ export default function useSocketListeners(){
             },data.timeLeft*1000)
         });
 
-        socket.on("Error", (data) => {
-            setLoading(false)
-            toast.warning(data.message || "Please check your inputs");
-        });
-
         return () => {
             socket.off("CliqueCreated", handleLogin)
             socket.off("JoinedClique", handleLogin)
             socket.off("midSessionError")
-            socket.off("Error")
-            socket.disconnect()
         }
-        
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     },[])
 
-    return {loading,setLoading}
 }
