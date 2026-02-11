@@ -1,11 +1,14 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Sidebar from "./Components/Sidebar/Sidebar";
 import Banner from "./Components/Banner";
-import {PanelRight} from "lucide-react"
+import { PanelRight } from "lucide-react"
 import { useSelector } from "react-redux";
 import type { RootState } from "../../util/store";
 import useRoomSocketListeners from "../../hooks/useRoomSocketListeners";
+import { roleID } from "../../util/role";
+import MessageBar from "./Components/MessageBar";
 
 
 
@@ -15,14 +18,24 @@ export default function Room() {
     const user = useSelector((state:RootState)=>state.user.user)
     const room = useSelector((state:RootState)=>state.room.room)
     const {friendList} = useRoomSocketListeners()
+    const isAdmin = user?.role === roleID.admin
+    const [canAnswer,setCanAnswer] = useState(false)
+    const [chatMode,setChatMode] = useState<"chat" | "answer">("chat")
+    const role = user?.role
+    const [triesLeft,setTriesLeft] = useState(0)
+    const [showMessageLoader,setShowMessageLoader] = useState(false)
 
+    useEffect(()=>{
+        if (role === roleID.admin){
+            setChatMode("chat")
+        }
+    },[role])
 
 return (
   <main className="bg-background-100 w-screen max-w-screen h-dvh flex">
 
     <Sidebar friendList={friendList}/>
     {showBanner && <Banner bannerVal={bannerVal}/>}
-
 
     <div className="hide-scrollbar relative min-h-dvh flex-1 flex flex-col w-full">
 
@@ -59,31 +72,7 @@ return (
             </div>
         </div>
 
-        <div className="bg-background-100 w-full flex flex-col gap-2 px-2 sm:px-6">
-            <div className="left-8 top-3.5 flex items-center justify-between gap-4 text-xl sm:text-2xl" >
-                <div className="flex items-center gap-4">
-                    <div id="questionmode-btn" className="flex items-center gap-2 cursor-pointer text-accent-blue">
-                        <i className="fa-solid fa-comment"></i>
-                        <p className="text-xs">Chat mode</p>
-                    </div>
-                    <div id="answermode-btn" className="flex items-center gap-2 cursor-pointer text-text-muted">
-                        <i className="fa-solid fa-microphone"></i>
-                        <p className="text-xs">Answer mode</p>
-                    </div>
-                </div>
-
-                <div id="question-Button" className="text-accent-blue items-center gap-2 hidden cursor-pointer">
-                    <p className="text-xs">New question</p>
-                    <i className="fa-solid text-sm fa-bolt"></i>     
-                </div>
-            </div>
-            <form id="message-form" className="w-full mb-6 relative" action="">
-                <input placeholder="Type a message" type="text" id="message-input" className="bg-background-200 text-sm p-4  focus:outline-0 focus:border-2 rounded-sm border-text-muted text-white placeholder:text-text-muted w-full h-12 2xl:h-14" />
-                <button type="submit" className="absolute right-3 text-accent-blue text-xl sm:text-2xl top-1/2 -translate-y-1/2">
-                    <i className="fa-solid fa-comment"></i>
-                </button>
-            </form>
-        </div>
+        <MessageBar showMessageLoader={showMessageLoader} setShowMessageLoader={setShowMessageLoader} triesLeft={triesLeft} setTriesLeft={setTriesLeft} isAdmin={isAdmin} canAnswer={canAnswer} setCanAnswer={setCanAnswer} chatMode={chatMode} setChatMode={setChatMode} />
 
         
 

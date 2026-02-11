@@ -45,158 +45,158 @@ const mobileSidebar = document.getElementById("mobile-sidebar");
 const mobileSidebarCloser = document.getElementById("mobile-sidebar-closer");
 const pulser = document.getElementById("pulser")
 
-window.addEventListener('DOMContentLoaded',async()=>{ 
-    if (room && user) {
-        console.log(room.token)
-        socket.emit("rejoinClique", {cliqueName: room.name,
-            username: user.name, token:room.token
-        });
-    }
-    if (user && user.role === 2) { 
-        answerModeBtn.classList.add("hidden")
-        document.getElementById("question-Button").classList.remove("hidden");
-        document.getElementById("question-Button").classList.add("flex");
-    }
-    getMemberList()
-})
+// window.addEventListener('DOMContentLoaded',async()=>{ 
+//     if (room && user) {
+//         console.log(room.token)
+//         socket.emit("rejoinClique", {cliqueName: room.name,
+//             username: user.name, token:room.token
+//         });
+//     }
+//     if (user && user.role === 2) { 
+//         answerModeBtn.classList.add("hidden")
+//         document.getElementById("question-Button").classList.remove("hidden");
+//         document.getElementById("question-Button").classList.add("flex");
+//     }
+//     getMemberList()
+// })
 
-socket.on("Boot Out",(data)=>{
-    toastr.warning(data.message || "Please, rejoin this room");
-    console.log("Booted out")
-    setTimeout(() => {
-        window.location.href = "/v1"
-    }, 1500);
-})
+// socket.on("Boot Out",(data)=>{
+//     toastr.warning(data.message || "Please, rejoin this room");
+//     console.log("Booted out")
+//     setTimeout(() => {
+//         window.location.href = "/v1"
+//     }, 1500);
+// })
 
-async function getMemberList () {
-    try {
-        const response = await fetch(`/room/guests/fetch/${encodeURIComponent(room.name)}`)
-        const data = await response.json()
-        if (!response.ok){
-            console.log(data.message)
-            return toastr.error(data.message)
-        }
-        console.log(data.members)
-        if (data.members.length>0){
-            memberList = data.members
-            const getUserFromMember = data.members.filter(data=>data.id == user.id)[0]
-            if (getUserFromMember.role == 1){
-                document.getElementById("question-Button").classList.add("hidden");
-                document.getElementById("question-Button").classList.remove("flex");
-                answerModeBtn.classList.remove("hidden")
-                answerModeBtn.classList.add("flex")
-                user.role = 1
-            }
-            else {
-                document.getElementById("question-Button").classList.remove("hidden");
-                document.getElementById("question-Button").classList.add("flex");
-                answerModeBtn.classList.add("hidden")
-                answerModeBtn.classList.remove("flex")
-                user.role = 2
-            }
-            sessionStorage.setItem('user', JSON.stringify(user));
-            renderSidebarMembers()
-            if (isCollapsed){
-                document.querySelectorAll(".hideOnCollapse").forEach(el => {
-                    el.classList.add("hidden");
-                });
-            }
-        }
-        return
-    } 
-    catch (error) {
-        console.log('error fetching members',error)
-        console.log("You are removed")
-        toastr.error("You are removed");
-        setTimeout(() => {
-            window.location.href = "/v1"
-        }, 1500);
-    }
-}
+// async function getMemberList () {
+//     try {
+//         const response = await fetch(`/room/guests/fetch/${encodeURIComponent(room.name)}`)
+//         const data = await response.json()
+//         if (!response.ok){
+//             console.log(data.message)
+//             return toastr.error(data.message)
+//         }
+//         console.log(data.members)
+//         if (data.members.length>0){
+//             memberList = data.members
+//             const getUserFromMember = data.members.filter(data=>data.id == user.id)[0]
+//             if (getUserFromMember.role == 1){
+//                 document.getElementById("question-Button").classList.add("hidden");
+//                 document.getElementById("question-Button").classList.remove("flex");
+//                 answerModeBtn.classList.remove("hidden")
+//                 answerModeBtn.classList.add("flex")
+//                 user.role = 1
+//             }
+//             else {
+//                 document.getElementById("question-Button").classList.remove("hidden");
+//                 document.getElementById("question-Button").classList.add("flex");
+//                 answerModeBtn.classList.add("hidden")
+//                 answerModeBtn.classList.remove("flex")
+//                 user.role = 2
+//             }
+//             sessionStorage.setItem('user', JSON.stringify(user));
+//             renderSidebarMembers()
+//             if (isCollapsed){
+//                 document.querySelectorAll(".hideOnCollapse").forEach(el => {
+//                     el.classList.add("hidden");
+//                 });
+//             }
+//         }
+//         return
+//     } 
+//     catch (error) {
+//         console.log('error fetching members',error)
+//         console.log("You are removed")
+//         toastr.error("You are removed");
+//         setTimeout(() => {
+//             window.location.href = "/v1"
+//         }, 1500);
+//     }
+// }
 
-function renderSidebarMembers(){
-    memberContainers.forEach(container=>{
-         container.innerHTML = ""
-             memberList.forEach((member) => {
-            const memberEl = `
-            <div class="flex justify-between  text-sm 2xl:text-base items-center w-full">
-                <div class="flex gap-2 justify-center items-center">
-                    <div class="w-10 h-10 capitalize rounded-full flex justify-center items-center text-white" style="background-color: ${member.color_hex};">
-                        ${member.name.slice(0,1)}
-                    </div>
-                    <div class="flex  flex-col gap-2">
-                        <p class="capitalize hideOnCollapse">${member.name}</p>
-                        <p class="text-accent-blue hideOnCollapse">${member.score || 0} pts</p>
-                    </div>
-                </div>
-                <div class="flex gap-2 items-center hideOnCollapse">
-                    ${ member.id == user.id? `<div class="w-3 h-3 bg-accent-green rounded-full"></div>` : ""}
-                    ${ member.role === 2? `<div class="text-xs 2xl:text-sm text-white px-2 bg-accent-blue rounded-sm">GM</div>`: ""}
-                </div>
-            </div>`
-            container.insertAdjacentHTML("beforeend", memberEl)
-        })
-    })
-}
+// function renderSidebarMembers(){
+//     memberContainers.forEach(container=>{
+//          container.innerHTML = ""
+//              memberList.forEach((member) => {
+//             const memberEl = `
+//             <div class="flex justify-between  text-sm 2xl:text-base items-center w-full">
+//                 <div class="flex gap-2 justify-center items-center">
+//                     <div class="w-10 h-10 capitalize rounded-full flex justify-center items-center text-white" style="background-color: ${member.color_hex};">
+//                         ${member.name.slice(0,1)}
+//                     </div>
+//                     <div class="flex  flex-col gap-2">
+//                         <p class="capitalize hideOnCollapse">${member.name}</p>
+//                         <p class="text-accent-blue hideOnCollapse">${member.score || 0} pts</p>
+//                     </div>
+//                 </div>
+//                 <div class="flex gap-2 items-center hideOnCollapse">
+//                     ${ member.id == user.id? `<div class="w-3 h-3 bg-accent-green rounded-full"></div>` : ""}
+//                     ${ member.role === 2? `<div class="text-xs 2xl:text-sm text-white px-2 bg-accent-blue rounded-sm">GM</div>`: ""}
+//                 </div>
+//             </div>`
+//             container.insertAdjacentHTML("beforeend", memberEl)
+//         })
+//     })
+// }
 
 
-toggleSidebar.addEventListener("click", () => {
-    isCollapsed = !isCollapsed;
-    if (isCollapsed) {
-        sidebar.classList.remove("w-64");
-        sidebar.classList.add("w-16");
+// toggleSidebar.addEventListener("click", () => {
+//     isCollapsed = !isCollapsed;
+//     if (isCollapsed) {
+//         sidebar.classList.remove("w-64");
+//         sidebar.classList.add("w-16");
 
-        sidebarHeadEl.classList.remove("justify-between");
-        sidebarHeadEl.classList.add("flex-col-reverse", "justify-center");
-        memberContainers.forEach(container=>{
-            container.classList.remove("p-6");
-            container.classList.add("p-2");
-        })
+//         sidebarHeadEl.classList.remove("justify-between");
+//         sidebarHeadEl.classList.add("flex-col-reverse", "justify-center");
+//         memberContainers.forEach(container=>{
+//             container.classList.remove("p-6");
+//             container.classList.add("p-2");
+//         })
     
 
-        roomNameEl.textContent = room.name.charAt(0).toUpperCase();
+//         roomNameEl.textContent = room.name.charAt(0).toUpperCase();
 
-        document.querySelectorAll(".hideOnCollapse").forEach(el => {
-            el.classList.add("hidden");
-        });
-    } else {
-        sidebar.classList.remove("w-16");
-        sidebar.classList.add("w-64");
+//         document.querySelectorAll(".hideOnCollapse").forEach(el => {
+//             el.classList.add("hidden");
+//         });
+//     } else {
+//         sidebar.classList.remove("w-16");
+//         sidebar.classList.add("w-64");
 
-        sidebarHeadEl.classList.remove("flex-col-reverse", "justify-center");
-        sidebarHeadEl.classList.add("justify-between");
-        memberContainers.forEach(container=>{
-            container.classList.remove("p-2");
-            container.classList.add("p-6");
-        })
-
-
-        roomNameEl.textContent = room.name;
-
-        document.querySelectorAll(".hideOnCollapse").forEach(el => {
-            el.classList.remove("hidden");
-        });
-    }
-});
-
-mobileMiniSidebarBtn.addEventListener("click", () => {
-    mobileSidebar.classList.remove("hidden")
-    mobileSidebar.classList.add("flex")
-})
-mobileSidebarCloser.addEventListener("click", () => {
-    mobileSidebar.classList.add("hidden")
-    mobileSidebar.classList.remove("flex")
-});
+//         sidebarHeadEl.classList.remove("flex-col-reverse", "justify-center");
+//         sidebarHeadEl.classList.add("justify-between");
+//         memberContainers.forEach(container=>{
+//             container.classList.remove("p-2");
+//             container.classList.add("p-6");
+//         })
 
 
-socket.on("userJoined", (data) => {
-    toastr.info(data.message);
-    getMemberList()
-});
+//         roomNameEl.textContent = room.name;
 
-socket.on("Error", (data) => {
-    toastr.warning(data.message || "Please check your inputs");
-})
+//         document.querySelectorAll(".hideOnCollapse").forEach(el => {
+//             el.classList.remove("hidden");
+//         });
+//     }
+// });
+
+// mobileMiniSidebarBtn.addEventListener("click", () => {
+//     mobileSidebar.classList.remove("hidden")
+//     mobileSidebar.classList.add("flex")
+// })
+// mobileSidebarCloser.addEventListener("click", () => {
+//     mobileSidebar.classList.add("hidden")
+//     mobileSidebar.classList.remove("flex")
+// });
+
+
+// socket.on("userJoined", (data) => {
+//     toastr.info(data.message);
+//     getMemberList()
+// });
+
+// socket.on("Error", (data) => {
+//     toastr.warning(data.message || "Please check your inputs");
+// })
 
 
 
