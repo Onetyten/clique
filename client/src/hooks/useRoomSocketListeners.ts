@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react"
 import { socket } from "../util/socket"
 import type { RootState } from "../util/store"
-import { useSelector } from "react-redux"
+import { useDispatch, useSelector } from "react-redux"
 import api from "../util/api"
 import type { MemberType } from "../types/types"
 import { toast } from "react-toastify"
+import { addMessage, type newMessageType } from "../store/messageSlice"
 
 
 export default function useRoomSocketListeners(){
     const user = useSelector((state:RootState)=>state.user.user)
     const room = useSelector((state:RootState)=>state.room.room)
     const [friendList,setFriendList] = useState<MemberType[]>([])
+    const dispatch = useDispatch()
 
     async function getFriendList () {
         if (!room || !user) return
@@ -34,19 +36,34 @@ export default function useRoomSocketListeners(){
     
     useEffect(()=>{
         if (room && user) {
-            socket.emit("validateToken", {cliqueName: room.name,username: user.name, token:room.token })
+            if (room && user && room.token) {
+                socket.emit("validateToken", {cliqueName: room.name,username: user.name, token:room.token })
+            }
         }
         socket.on("userJoined", (data) => {
             toast.info(data.message);
             getFriendList()
         });
+
+        socket.on("messageSent",(data)=>{
+            const newMessage:newMessageType = { ...data,type: "chat" }
+            dispatch(addMessage(newMessage))            
+        })
+
+        socket.on("reconnect", () => {
+            if (room && user && room.token) {
+                socket.emit("validateToken", {cliqueName: room.name, username: user.name, token: room.token})
+            }
+        })
         
         return () => {
+            socket.off("reconnect")
             socket.off("validateToken")
             socket.off("userJoined")
+            socket.off("messageSent")
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    },[])
+    },[room, user])
 
     return{friendList}
 }

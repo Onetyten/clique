@@ -12,6 +12,17 @@ export default function useGlobalSocketListeners(){
 
     useEffect(()=>{
         if (!socket.connected) socket.connect()
+    
+        socket.on("disconnect", (reason) => {
+            console.log("Socket disconnected:", reason)
+            if (reason === "io server disconnect") {
+                socket.connect()
+            }
+        })
+    
+        socket.on("connect_error", (error) => {
+            console.error("Connection error:", error)
+        })
 
         socket.on("Error", (data) => {
             setAuthLoading(false)
@@ -29,8 +40,12 @@ export default function useGlobalSocketListeners(){
         })
 
         return () => {
+            socket.off("connect")
+            socket.off("disconnect")
+            socket.off("connect_error")
             socket.off("Error")
-            socket.disconnect()
+            socket.off("Boot Out")
+            
         }
     },[])
 

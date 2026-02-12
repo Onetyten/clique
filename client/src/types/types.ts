@@ -6,13 +6,11 @@ export interface roomType {
 }
 export interface userType {
     id: string,
-    joined_at: string,
     name: string,
     room_id : string,
     role: number,
     hex_code: string,
     score: number,
-    was_gm: boolean
 }
 
 export interface MemberType {
@@ -33,7 +31,15 @@ export interface loginDataType{
 }
 
 export interface messageType {
+    user: {
+      id: string,
+      name: string,
+      room_id: string,
+      role: number,
+      hex_code: string,
+    },
+    message: string,
+    timeStamp: number
     id:string
-    value:string,
     type: "chat" | "question" | "correct" | "wrong"
 }

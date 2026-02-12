@@ -12,6 +12,14 @@ export interface UserType {
   joined_at: string;
 }
 
+export interface ChatUserType {
+    id: string;
+    name: string;
+    room_id: string;
+    role: number;
+    hex_code: string;
+}
+
 export interface RoomType {
   id: string;
   token?:string
@@ -20,7 +28,7 @@ export interface RoomType {
 }
 
 export interface ChatType {
-  user: UserType; 
+  user: ChatUserType; 
   message: string;
   color:string;
   timeStamp: number;

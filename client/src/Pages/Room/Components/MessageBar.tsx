@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { MessageSquare, Mic, Send, Zap } from 'lucide-react'
 import type React from 'react'
 import { useState, type FormEvent } from 'react'
-import { toast } from 'react-toastify'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import type { RootState } from '../../../util/store'
 import { socket } from '../../../util/socket'
+import { addMessage, type newMessageType } from '../../../store/messageSlice'
 
 interface propType{
     isAdmin:boolean
@@ -21,9 +22,19 @@ interface propType{
 export default function MessageBar({isAdmin,setChatMode,chatMode,setShowMessageLoader}:propType) {
     const [message,setMessage] = useState("")
     const user = useSelector((state:RootState)=>state.user.user)
+    const dispatch = useDispatch()
 
     function chatMessage(){
-        const payload = {user,message,color:user?.hex_code,timeStamp: Date.now()};
+        if (!user) return
+        const {score,...sender} = {...user}
+        const payload = {
+            user:sender,
+            message,
+            timeStamp:Date.now()
+        
+        };
+        const newMessage:newMessageType = { ...payload,type: "chat" }
+        dispatch(addMessage(newMessage))
         socket.emit("ChatMessage", payload);
         setShowMessageLoader(true)
     }
@@ -32,7 +43,6 @@ export default function MessageBar({isAdmin,setChatMode,chatMode,setShowMessageL
         e.preventDefault()
         if (message.trim().length===0) return
         if (chatMode==="chat") chatMessage()    
-        toast(message)
         setMessage("")
     }
 

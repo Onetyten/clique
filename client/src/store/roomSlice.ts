@@ -11,9 +11,12 @@ const roomSlice = createSlice({
     reducers:{
         setRoom:(state,action:PayloadAction<roomType>)=>{
             state.room = action.payload
+        },
+        clearRoom:(state)=>{
+            state.room = null
         }
     }
 })
 
-export const {setRoom} = roomSlice.actions
+export const {setRoom,clearRoom} = roomSlice.actions
 export default roomSlice.reducer

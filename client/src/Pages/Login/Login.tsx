@@ -30,6 +30,7 @@ export default function Login() {
         socket.emit("CreateClique",{cliqueKey,username,cliqueName})
     }
 
+
   return (
     <div className="bg-background-100 min-h-dvh flex justify-center items-center">
 

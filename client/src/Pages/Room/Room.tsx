@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Sidebar from "./Components/Sidebar/Sidebar";
 import Banner from "./Components/Banner";
-import { PanelRight } from "lucide-react"
 import { useSelector } from "react-redux";
 import type { RootState } from "../../util/store";
 import useRoomSocketListeners from "../../hooks/useRoomSocketListeners";
@@ -24,6 +23,7 @@ export default function Room() {
     const role = user?.role
     const [triesLeft,setTriesLeft] = useState(0)
     const [showMessageLoader,setShowMessageLoader] = useState(false)
+    const messages = useSelector((state:RootState)=>state.messages.messages)
 
     useEffect(()=>{
         if (role === roleID.admin){
@@ -37,12 +37,7 @@ return (
     <Sidebar friendList={friendList}/>
     {showBanner && <Banner bannerVal={bannerVal}/>}
 
-    <div className="hide-scrollbar relative min-h-dvh flex-1 flex flex-col w-full">
-
-        <div className="w-full bg-background text-text-primary flex items-center justify-start gap-3 lg:hidden p-3"> 
-            <PanelRight className="text-accent-blue cursor-pointer text-2xl" />
-            <p id="roomName">{room?.name.slice(0,1)}</p>
-        </div>
+    <div className="relative min-h-dvh flex-1 flex flex-col w-full">
 
         <div id="game-question-container" className="bg-background-100 sm:text-base text-sm text-white w-full hidden justify-between items-center border-b-2 border-background-200 gap-6 p-3 sm:p-6">
             <div id="game-question-el" className="text-justify sm:text-base text-xs"></div>
@@ -51,6 +46,7 @@ return (
                 <span id="countdown-el">60</span>s
             </div>
         </div>
+
         <div className="absolute w-full h-full bg-background-100/80 backdrop-blur-3xl flex justify-center items-center -z-10"></div>
         <div className="absolute w-full h-full flex justify-center items-center -z-20 overflow-hidden">
             <div id="pulser" className="blob bg-accent-blue w-80 h-80 rounded-full animate-pulse"></div>
@@ -58,17 +54,14 @@ return (
 
         <div className="flex-1 w-full overflow-y-auto hide-scrollbar p-2 sm:p-6 space-y-2">
             <div id="chatContainer" className="flex-1 sm:text-xs text-base w-full overflow-y-auto hide-scrollbar space-y-2">
+                {messages.map((item,index)=>{
+                    return(
+                        <div key={index} className={`w-full flex flex-col ${item.user.id===user?.id?"items-end":"items-start"}`}>
+                            <p className={`p-3 bg-accent-blue ${item.user.id===user?.id?"rounded-tr-none":"rounded-tl-none"} text-sm text-white rounded-xl`}>{item.message}</p>
+                        </div>
+                    )
+                })}
 
-            </div>
-            
-            <div id="message-loader" className="w-full hidden gap-2 justify-end">
-                <div className="w-20 h-10 text-white rounded-sm bg-accent-blue">
-                    <div className="w-full h-full flex top-0 left-0 justify-center items-center gap-2">
-                        <div className="dot w-2 h-2 rounded-full bg-white"></div>
-                        <div className="dot w-2 h-2 rounded-full bg-white"></div>
-                        <div className="dot w-2 h-2 rounded-full bg-white"></div>
-                    </div>
-                </div>
             </div>
         </div>
 
