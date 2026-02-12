@@ -115,7 +115,7 @@ isAdmin: boolean;}>){
 
             const payload = {id:newUser.id,roomId: newUser.room_id}
             const token  = jwt.sign(payload,secret)
-            const {clique_key, ...newRoom} = {...roomExists.rows[0],token}
+            const {clique_key,was_gm,joined_at,...newRoom} = {...roomExists.rows[0],token}
             console.log(`user ${name} has been added into clique ${roomName}`);
             socket.join(roomId.toString());
             socket.emit("JoinedClique", { message: `Successfully joined ${roomName} `, room:newRoom,user: newUser});

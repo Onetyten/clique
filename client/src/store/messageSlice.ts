@@ -2,9 +2,15 @@
 import { createSlice, nanoid, type PayloadAction } from "@reduxjs/toolkit";
 import type { messageType } from "../types/types";
 
+
+
+export type newMessageType = Omit<messageType,"id">
+
+
 const initialState:{messages:messageType[]} = {
     messages:[]
 }
+
 
 const messageSlice = createSlice({
     name:"messages",
@@ -14,19 +20,21 @@ const messageSlice = createSlice({
             reducer:(state,action:PayloadAction<messageType>)=>{
                 state.messages.push(action.payload)
             },
-            prepare:(message:messageType)=>{
+            prepare:(message:newMessageType)=>{
                 const id = nanoid()
-                const {id:_,...newMessage} = message
-                return {payload:{id,...newMessage}}
+                return {payload:{id,...message}}
             }
         },
         removeMessage:(state,action:PayloadAction<string>)=>{
             const id = action.payload
             state.messages.filter(item=>item.id !== id)
         },
+        clearMessages:(state)=>{
+            state.messages = []
+        }
     }
 })
 
 
-export const {addMessage,removeMessage} = messageSlice.actions
+export const {addMessage,removeMessage,clearMessages} = messageSlice.actions
 export default messageSlice.reducer

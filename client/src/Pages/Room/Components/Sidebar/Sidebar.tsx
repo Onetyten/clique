@@ -16,7 +16,7 @@ export default function Sidebar({friendList}:propType) {
     const [sidebarOpened,setOpenSidebar] = useState(true)
 
   return (
-    <div className={`${sidebarOpened?"w-64":"w-16"} transition-all duration-300 text-text-primary hidden lg:flex flex-col items-start justify-start bg-background hide-scrollbar min-h-dvh overflow-y-scroll`}>
+    <div className={`${sidebarOpened?"w-64":"w-16"} transition-all duration-300 text-text-primary flex flex-col items-start justify-start bg-background hide-scrollbar min-h-dvh overflow-y-scroll`}>
 
         <div className={`mb-3 text-2xl w-full gap-6 flex ${sidebarOpened?"flex-row items-baseline p-6":"flex-col items-center px-0 py-6"} justify-between `}>
             <p id="roomName">{sidebarOpened?room?.name:room?.name.slice(0,1)}</p>

@@ -62,14 +62,30 @@ export async function handleValidateToken(socket:Socket,{cliqueName,username,tok
             console.log(`User ${username} not found in clique ${cliqueName}`)
             return socket.emit("Boot Out", { message: "User not found in this clique"})
         }
+        const user = userResult.rows[0]
 
+        const existingEntry = socketUserMap.get(socket.id)
+
+        if (existingEntry){
+            socket.leave(existingEntry.roomId)
+        }
+
+        socket.join(roomId)
+        socketUserMap.set(socket.id,{userId:user.id,roomId:room.id,isAdmin:user.role === roleID.admin})
+        socket.emit("tokenValidated", { message: "Successfully reconnected to room", user, room: { ...room, token }});
         console.log(`user ${username} validated`)
-
         return
     }
     catch (error:any) {
-        console.error("Failed to join clique",error);
-        return socket.emit("Error", { message: "Failed to join clique due to an error, please try again" });
+        console.error("Token validation failed",error);
+        if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError'){
+            return socket.emit("Boot Out", { message: "Session expired. Please rejoin the room."});
+        }
+
+        return socket.emit("Error", { message: "Failed to validate session" });
+    }
+    finally{
+        client.release()
     }
 
 }

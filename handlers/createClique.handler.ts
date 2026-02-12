@@ -74,7 +74,7 @@ isAdmin: boolean;}>){
             const newUser = newUserResult.rows[0];
             const payload = {id:newUser.id,roomId: newUser.room_id}
             const token  = jwt.sign(payload,secret)
-            const {clique_key, ...newRoom} = {...createdRoom.rows[0],token}
+            const {clique_key,was_gm,joined_at, ...newRoom} = {...createdRoom.rows[0],token}
             socket.join(roomId);
             socketUserMap.set(socket.id,{userId:newUser.id,roomId,isAdmin:newUser.role === adminRoleId})
             socket.to(roomId).emit("userJoined",{ message:`${savedName} has joined the room`, savedName})
