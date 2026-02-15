@@ -6,6 +6,7 @@ import Room from "./Pages/Room/Room"
 import store, { persistor } from "./util/store"
 import { PersistGate } from "redux-persist/integration/react"
 import SocketProvider from "./SocketProvider";
+import "react-activity/dist/library.css"
 
 
 

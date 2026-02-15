@@ -1,14 +1,14 @@
 
 import { useSelector } from 'react-redux'
 import type { RootState } from '../../../../util/store'
-import type { MemberType } from '../../../../types/types'
+import type { userType } from '../../../../types/types'
 import SidebarItem from './sidebarItem'
 import { PanelRight } from 'lucide-react'
 import { useState } from 'react'
 
 
 interface propType{
-    friendList:MemberType[]
+    friendList:userType[]
 }
 
 export default function Sidebar({friendList}:propType) {

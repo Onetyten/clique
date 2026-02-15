@@ -112,16 +112,17 @@ isAdmin: boolean;}>){
             }
 
             await client.query("COMMIT")
-
+            
+            const {was_gm,joined_at,...clientUser} = newUser
             const payload = {id:newUser.id,roomId: newUser.room_id}
             const token  = jwt.sign(payload,secret)
-            const {clique_key,was_gm,joined_at,...newRoom} = {...roomExists.rows[0],token}
+            const {clique_key,...newRoom} = {...roomExists.rows[0],token}
             console.log(`user ${name} has been added into clique ${roomName}`);
             socket.join(roomId.toString());
-            socket.emit("JoinedClique", { message: `Successfully joined ${roomName} `, room:newRoom,user: newUser});
+            socket.emit("JoinedClique", { message: `Successfully joined ${roomName} `, room:newRoom,user: clientUser});
 
             socketUserMap.set(socket.id,{userId:newUser.id,roomId,isAdmin:newUser.role === 2})
-            return socket.to(roomId).emit("userJoined",{ message:`${username} has joined the room`,newUser})
+            return socket.to(roomId).emit("userJoined",{ message:`${username} has joined the room`,user:clientUser})
         }
         catch (error:any) {
             await client.query("ROLLBACK")

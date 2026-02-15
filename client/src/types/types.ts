@@ -41,5 +41,15 @@ export interface messageType {
     message: string,
     timeStamp: number
     id:string
-    type: "chat" | "question" | "correct" | "wrong"
+    type: "chat" | "question" | "correct" | "wrong" | "answer"
+}
+
+export interface sessionType{
+    id:string
+    is_active:boolean
+    question:string
+    answer:string
+    end_time:number
+    room_id:string
+    gm_id:string
 }
