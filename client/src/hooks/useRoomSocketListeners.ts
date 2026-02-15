@@ -26,7 +26,7 @@ export default function useRoomSocketListeners(){
     async function getFriendList () {
         if (!room || !user) return
         try {
-            const res = await api.get<FetchGuestsResponse>(`/room/guests/fetch/${encodeURIComponent(room.name)}`)
+            const res = await api.get<FetchGuestsResponse>(`/room/guests/fetch/${encodeURIComponent(room.id)}`)
             const data = res.data
             if (data.members.length>0){ setFriendList(data.members) }
             const newUser = data.members.find(member=>member.id === user.id)

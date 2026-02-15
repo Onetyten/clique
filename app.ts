@@ -4,6 +4,7 @@ import express, { Request, Response } from "express";
 import cors from 'cors'
 import path from 'path'
 import http from 'http'
+import pino from 'pino';
 import { Server, Socket } from 'socket.io';
 import { handleCreateClique } from './handlers/createClique.handler';
 import { handleJoinClique } from './handlers/joinClique.handler';
@@ -15,10 +16,25 @@ import { handleDisconnect } from './handlers/disconnectHandler';
 import { handleRejoinClique } from './handlers/rejoinClique.handler';
 import { handleValidateToken } from './handlers/handleValidateToken.handler';
 import { endExpiredSessionOnStart } from './services/session.service';
+import pinoCaller from 'pino-caller';
 
 
 const rootDir = path.basename(__dirname) === "dist"?path.join(__dirname,".."):__dirname
 const app = express()
+
+const baseLogger = pino({
+  level: "debug",
+  transport: {
+    target: "pino-pretty",
+    options: {
+      colorize: true,
+      ignore: "pid,hostname,time,level"
+    }
+  }
+});
+
+export const logger = pinoCaller(baseLogger);
+
 app.use(cors({origin:"*"}))
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
@@ -68,8 +84,8 @@ const sessionTimeoutMap = new Map<string, ReturnType<typeof setTimeout>>()
 
 
 io.on("connection",async (socket:Socket)=>{
-    console.log("A user connected",socket.id)
-    endExpiredSessionOnStart(socket)
+    logger.info({socketId:socket.id},"A user connected")
+    // endExpiredSessionOnStart(socket)
 
     socket.on("CreateClique",(data)=>handleCreateClique(socket,data,socketUserMap))
     socket.on("joinClique",(data)=>handleJoinClique(socket,data,socketUserMap))
@@ -82,5 +98,5 @@ io.on("connection",async (socket:Socket)=>{
 })
 
 server.listen(port,()=>{
-    console.log("clique is up and running")
+    logger.info("clique is up and running")
 })

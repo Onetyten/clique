@@ -7,6 +7,7 @@ import { roleID } from "../config/role";
 import { assignNextAdmin } from "../services/admin.service";
 import { endCurrentSession } from "../services/session.service";
 import { SendMessage } from "../services/chat.service";
+import { logger } from "../app";
 
 
 interface propTypes{
@@ -19,7 +20,7 @@ interface propTypes{
 export async function handleQuestionAnswered(io:Server,socket:Socket,{currentSession,user,answer,timestamp}:propTypes,sessionTimeoutMap: Map<string, NodeJS.Timeout>) {
         const { error} = sessionSchema.validate({currentSession,user});
         if (error){
-            console.error("validation failed",error.details);
+            logger.error({error: error.details},"request validation failed");
             return socket.emit("Error",{message:'Invalid input'})
         }
 
@@ -70,7 +71,7 @@ export async function handleQuestionAnswered(io:Server,socket:Socket,{currentSes
             
             if (!result) return
             const {roundNum, newGM} = result
-            console.log("answer correct session over")
+            logger.info("answer correct session over")
             await client.query('UPDATE members SET score = score + $1 WHERE id=$2',[addedScore,user.id])
             await client.query("COMMIT")
 
@@ -78,7 +79,7 @@ export async function handleQuestionAnswered(io:Server,socket:Socket,{currentSes
         } 
         catch (error) {
             await client.query("ROLLBACK")
-            console.log(error)
+            logger.info(error)
             return  socket.emit("Error", { message: "Internal server error" });
         }
         finally {

@@ -9,6 +9,7 @@ import { roleID } from "../config/role";
 import { HexCodes } from "../config/hexCodes";
 import { PoolClient } from "pg";
 import { assignNextAdmin } from "../services/admin.service";
+import { logger } from "../app";
 
 interface InputType{
     cliqueKey:string;
@@ -25,7 +26,7 @@ isAdmin: boolean;}>){
         }
         const { error} = cliqueCreateSchema.validate({cliqueKey,cliqueName,username});
         if (error){
-            console.error("validation failed","Create clique handler","\n",error.details);
+            logger.error({error: error.details},"request validation failed, invalid request");
             return socket.emit("Error",{message:error.message})
         }
         const client = await pool.connect()
@@ -52,7 +53,7 @@ isAdmin: boolean;}>){
 
             if (roomExists.rows.length>0){
                 await client.query("ROLLBACK")
-                console.log("This Clique name has already been taken")
+                logger.info("This Clique name has already been taken")
                 return socket.emit("Error", { message: "This Clique name has already been taken" }); 
             }
 
@@ -79,18 +80,18 @@ isAdmin: boolean;}>){
             socket.join(roomId);
             socketUserMap.set(socket.id,{userId:newUser.id,roomId,isAdmin:newUser.role === adminRoleId})
             socket.to(roomId).emit("userJoined",{ message:`${savedName} has joined the room`, savedName})
-            console.log( `clique ${roomName} created by ${savedName}`);
-            console.log("New room",newRoom)
+            logger.info( `clique ${roomName} created by ${savedName}`);
+            logger.info("New room",newRoom)
             socket.emit("CliqueCreated",{message:'Clique created',room:newRoom,user:clientUser})
             return
         }
         catch (error:any) {
             await client.query("ROLLBACK")
             if (error.code === "23505") {
-                console.error("This Clique name has already been taken")
+                logger.error("This Clique name has already been taken")
                 return socket.emit("Error", { message: "This Clique name has already been taken" });
             }
-            console.error("Failed to create clique",error);
+            logger.error("Failed to create clique",error);
             return socket.emit("Error", { message: "Failed to create room due to an error, please try again" });
         }
         finally{

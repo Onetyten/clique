@@ -5,6 +5,7 @@ import pool from "../config/pgConnect";
 import jwt from "jsonwebtoken"
 import userRejoinSchema from "../validation/rejoinRoom.validation";
 import { roleID } from "../config/role";
+import { logger } from "../app";
 
 interface InputType{
     cliqueName:string,
@@ -20,14 +21,14 @@ isAdmin: boolean;}>){
         }
         const { error} = userRejoinSchema.validate({cliqueName,username,token});
         if (error){
-            console.error("validation failed","Rejoin clique handler",error.details);
+            logger.error({error:error.details},"request validation failed",);
             return socket.emit("Boot Out",{message:error.message})
         }
         const decoded = jwt.verify(token,secret)
 
-        console.log(`request from ${username} to join clique acknowledged`)
+        logger.info(`request from ${username} to join clique acknowledged`)
         if (!decoded){
-            console.error("Invalid token",);
+            logger.error("Invalid token",);
             return socket.emit("Boot Out",{message:"Please, rejoin this room"});
         }
         const name = username.toLowerCase()
@@ -37,7 +38,7 @@ isAdmin: boolean;}>){
         try {
             const roomExists = await pool.query('SELECT * FROM rooms WHERE name = $1',[cliqueName]);      
             if (roomExists.rows.length === 0){
-                console.log('This room does not exist');
+                logger.info('This room does not exist');
                 return socket.emit("Error", { message: "This clique does not exist" });
             }
             
@@ -54,7 +55,7 @@ isAdmin: boolean;}>){
                 await pool.query('UPDATE members SET role = $1 WHERE id = $2 AND NOT EXISTS (SELECT 1 FROM members WHERE room_id = $3 and role = $1 )',[adminId,newUser.id,roomId])
             }
 
-            console.log(`user ${name} has been added into clique ${roomName}`);
+            logger.info(`user ${name} has been added into clique ${roomName}`);
             socket.join(roomId);
             socket.emit("JoinedClique", {
                 message: `Successfully joined ${roomName} `, room:roomExists.rows[0],user: newUser
@@ -64,7 +65,7 @@ isAdmin: boolean;}>){
             return socket.to(roomId).emit("userJoined",{ message:`${username} has joined the room`,newUser})
         }
         catch (error:any) {
-            console.error("Failed to join clique",error);
+            logger.error("Failed to join clique",error);
             return socket.emit("Error", { message: "Failed to join clique due to an error, please try again" });
         }
     }

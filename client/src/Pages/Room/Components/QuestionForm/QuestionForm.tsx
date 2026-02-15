@@ -34,7 +34,6 @@ export default function QuestionForm({setShowQuestionForm,questionLoading,setQue
         setQuestionLoading(true)
     }
 
-
   return (
     <div onClick={()=>setShowQuestionForm(false)} className="absolute w-full flex justify-center items-center h-full bg-background/70">
         <div onClick={(e)=>e.stopPropagation()} className="p-6 min-h-80 sm:p-8 w-10/12 sm:w-md bg-background text-sm text-text-primary rounded-sm flex flex-col items-center gap-5">

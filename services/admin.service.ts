@@ -1,6 +1,7 @@
 import { PoolClient } from "pg"
 import pool from "../config/pgConnect"
 import { roleID } from "../config/role"
+import { logger } from "../app"
 
 export async function assignNextAdmin(client:PoolClient,roomId: string,excludeUserId: string) {
 
@@ -47,6 +48,7 @@ export async function assignNextAdmin(client:PoolClient,roomId: string,excludeUs
     WHERE room_id = $4`,
     [newAdmin.id, adminID, guestID, roomId]
   )
+  logger.info(`new admin ${newAdmin.name} selected in room ${roomId}`)
 
   return newAdmin
 }
