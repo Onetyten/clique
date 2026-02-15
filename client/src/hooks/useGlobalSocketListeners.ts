@@ -14,7 +14,7 @@ export default function useGlobalSocketListeners(){
         if (!socket.connected) socket.connect()
     
         socket.on("disconnect", (reason) => {
-            console.log("Socket disconnected:", reason)
+            // console.log("Socket disconnected:", reason)
             if (reason === "io server disconnect") {
                 socket.connect()
             }
@@ -32,7 +32,7 @@ export default function useGlobalSocketListeners(){
 
         socket.on("Boot Out",(data)=>{
             toast.warn(data.message || "Please, rejoin this room");
-            console.log("Booted out")
+            // console.log("Booted out")
             setTimeout(() => {
                 navigate(`/`)
                 window.location.href = "/"

@@ -1,6 +1,7 @@
 import dotenv from 'dotenv'
 dotenv.config()
 import Redis from "ioredis";
+import { logger } from '../app';
 
 const getRedisUrl = ()=>{
     if (process.env.REDIS_URL){
@@ -13,11 +14,11 @@ const redis = new Redis(getRedisUrl())
 
 redis.on('connect',()=>{
     
-    console.log("connected to redis")
+    logger.info("connected to redis")
 })
 
 redis.on('error',(err)=>{
-    console.log("Redis connection error",err)
+    logger.info({error:err},"Redis connection error")
 })
 
 process.on('SIGTERM', () => {

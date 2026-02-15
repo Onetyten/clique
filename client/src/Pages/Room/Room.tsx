@@ -1,7 +1,8 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useState } from "react";
 import Sidebar from "./Components/Sidebar/Sidebar";
 import Banner from "./Components/Banner";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import type { RootState } from "../../util/store";
 import useRoomSocketListeners from "../../hooks/useRoomSocketListeners";
 import { roleID } from "../../util/role";
@@ -9,9 +10,6 @@ import MessageBar from "./Components/MessageBar";
 import ChatContainer from "./Components/ChatContainer/ChatContainer";
 import QuestionForm from "./Components/QuestionForm/QuestionForm";
 import QuestionBar from "./Components/QuestionBar/QuestionBar";
-import { socket } from "../../util/socket";
-import { clearSession } from "../../store/sessionSlice";
-
 
 
 export default function Room() {
@@ -25,7 +23,6 @@ export default function Room() {
     const [triesLeft,setTriesLeft] = useState(0)
     const [showMessageLoader,setShowMessageLoader] = useState(false)
     const [showQuestionForm,setShowQuestionForm] = useState(false)
-    const dispatch = useDispatch()
     const [timeLeft,setTimeleft] = useState<number>(60)
     
 
@@ -38,21 +35,15 @@ export default function Room() {
     useEffect(()=>{
         if (!session) return
         const interval = setInterval(()=>{
-        const remaining  = (session.end_time-Date.now())/1000
-
-        if (remaining<=0) {
-            setTimeleft(0)
-            const payload = {currentSession:session,isAnswer:false,user}
-            socket.emit("sessionOver",payload)
-            dispatch(clearSession())
-        }
+            const remaining  = Math.floor((session.end_time-Date.now())/1000)
+            if (remaining <= 0) {
+                setTimeleft(0)
+                return
+            }
             setTimeleft(remaining)
         },1000)
         return ()=> clearInterval(interval)
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     },[session])
-
 
 return (
     <main className="bg-background-100 w-screen max-w-screen h-dvh flex">

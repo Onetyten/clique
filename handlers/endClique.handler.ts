@@ -1,3 +1,4 @@
+import { logger } from "../app";
 import pool from "../config/pgConnect";
 
 export async function scorchedEarth(roomId:string) {
@@ -5,9 +6,9 @@ export async function scorchedEarth(roomId:string) {
         await pool.query('DElETE FROM sessions WHERE room_id = $1',[roomId])
         await pool.query('DElETE FROM members WHERE room_id = $1',[roomId])
         await pool.query('DElETE FROM rooms WHERE id = $1',[roomId])
-        console.log(`Room ${roomId} cleaned up from the Database`)
+        logger.info(`Room ${roomId} cleaned up from the Database`)
     }
     catch (error) {
-        console.error("Cleanup failed:", error);
+        logger.error({error},"Cleanup failed:",);
     }
 }

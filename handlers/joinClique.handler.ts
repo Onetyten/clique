@@ -7,6 +7,7 @@ import { roleID } from "../config/role";
 import { HexCodes } from "../config/hexCodes";
 import { assignNextAdmin } from "../services/admin.service";
 import { PoolClient } from "pg";
+import { logger } from "../app";
 
 interface InputType{
     cliqueKey:string,
@@ -22,10 +23,10 @@ isAdmin: boolean;}>){
         }
         const { error} = userJoinSchema.validate({cliqueKey,username,cliqueName});
         if (error){
-            console.error("validation failed","Join clique handler","\n",error.details);
+           logger.error({error:error.details},"request validation failed",);
             return socket.emit("Error",{message:error.message})
         }
-        console.log(`request from ${username} to join clique acknowledged`)
+        logger.info(`request from ${username} to join clique acknowledged`)
         const name = username.toLowerCase()
         let guestId = roleID.guest
         let adminId = roleID.admin
@@ -54,13 +55,13 @@ isAdmin: boolean;}>){
             if (roomExists.rows.length === 0){
 
                 await client.query("ROLLBACK")
-                console.log(`User ${username} tried to join inexistant room ${cliqueName}`);
+                logger.info(`User ${username} tried to join inexistant room ${cliqueName}`);
                 return socket.emit("Error", { message: "This clique does not exist" });
             }
             const isPasswordCorrect = await bcrypt.compare(cliqueKey,roomExists.rows[0].clique_key)
             if (!isPasswordCorrect){
                 await client.query("ROLLBACK")
-                console.log('Incorrect password');
+                logger.info('Incorrect password');
                 return socket.emit("Error", { message: "Incorrect key" });
             }
 
@@ -91,7 +92,7 @@ isAdmin: boolean;}>){
 
                 if (connected){
                     await client.query("COMMIT")
-                    console.log(`sorry, user ${name} already exists in this clique, please choose another name`);
+                    logger.info(`sorry, user ${name} already exists in this clique, please choose another name`);
                     return socket.emit("Error", { message: `user ${name} already exists in this clique choose another name` })  
                 }
                 else{
@@ -117,7 +118,7 @@ isAdmin: boolean;}>){
             const payload = {id:newUser.id,roomId: newUser.room_id}
             const token  = jwt.sign(payload,secret)
             const {clique_key,...newRoom} = {...roomExists.rows[0],token}
-            console.log(`user ${name} has been added into clique ${roomName}`);
+            logger.info(`user ${name} has been added into clique ${roomName}`);
             socket.join(roomId.toString());
             socket.emit("JoinedClique", { message: `Successfully joined ${roomName} `, room:newRoom,user: clientUser});
 
@@ -126,7 +127,7 @@ isAdmin: boolean;}>){
         }
         catch (error:any) {
             await client.query("ROLLBACK")
-            console.error("Failed to join clique",error);
+            logger.error("Failed to join clique",error);
             return socket.emit("Error", { message: "Failed to join clique due to an error, please try again" });
         }
         finally {

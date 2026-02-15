@@ -5,6 +5,7 @@ import pool from "../config/pgConnect";
 import jwt from "jsonwebtoken"
 import userRejoinSchema from "../validation/rejoinRoom.validation";
 import { roleID } from "../config/role";
+import { logger } from "../app";
 
 interface InputType{
     cliqueName:string,
@@ -21,13 +22,13 @@ export async function handleValidateToken(socket:Socket,{cliqueName,username,tok
     const { error} = userRejoinSchema.validate({cliqueName,username,token});
 
     if (error){
-        console.error("validation failed","Validate clique handler",error.details);
+        logger.error({error: error.details},"validation failed",);
         return socket.emit("Boot Out",{message:error.message})
     }
 
     const decoded = jwt.verify(token,secret)  as { id: string; roomId: string }
 
-    console.log(`validation from ${username} to join clique acknowledged`)
+    logger.info(`validation from ${username} to join clique acknowledged`)
     
 
     const client = await pool.connect()
@@ -48,7 +49,7 @@ export async function handleValidateToken(socket:Socket,{cliqueName,username,tok
         const roomId = room.id
 
         if (!decoded || decoded.roomId !== roomId) {
-            console.error("Invalid token",);
+            logger.error("Invalid token",);
             return socket.emit("Boot Out", { message: "Invalid token for this room" })
         }
 
@@ -59,7 +60,7 @@ export async function handleValidateToken(socket:Socket,{cliqueName,username,tok
             [roomId, username]
         )
         if (userResult.rows.length === 0) { 
-            console.log(`User ${username} not found in clique ${cliqueName}`)
+            logger.info(`User ${username} not found in clique ${cliqueName}`)
             return socket.emit("Boot Out", { message: "User not found in this clique"})
         }
         const user = userResult.rows[0]
@@ -73,11 +74,11 @@ export async function handleValidateToken(socket:Socket,{cliqueName,username,tok
         socket.join(roomId)
         socketUserMap.set(socket.id,{userId:user.id,roomId:room.id,isAdmin:user.role === roleID.admin})
         socket.emit("tokenValidated", { message: "Successfully reconnected to room", user, room: { ...room, token }});
-        console.log(`user ${username} validated`)
+        logger.info(`user ${username} validated`)
         return
     }
     catch (error:any) {
-        console.error("Token validation failed",error);
+        logger.error("Token validation failed",error);
         if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError'){
             return socket.emit("Boot Out", { message: "Session expired. Please rejoin the room."});
         }

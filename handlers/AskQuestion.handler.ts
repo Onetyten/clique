@@ -3,6 +3,7 @@ import { UserType } from "../types/type";
 import pool from "../config/pgConnect";
 import { roleID } from "../config/role";
 import { endCurrentSession } from "../services/session.service";
+import { logger } from "../app";
 
 interface QuestionType{
   question:string;
@@ -15,13 +16,14 @@ export async function handleAskQuestion(io:Server,socket: Socket, { user,questio
 
   const client = await pool.connect()
   try {
-
       const gameRoom = await client.query(`
         SELECT * FROM members
         WHERE room_id=$1`,
       [user.room_id])
 
-      if (gameRoom.rows.length < 2 ) return socket.emit("questionError", { message: "There must be at least two players to start a game session" });
+      if (gameRoom.rows.length < 2 ){
+        socket.emit("questionError", { message: "There must be at least two players to start a game session" });
+      }
 
       const activeSessions = await client.query(
         `SELECT id FROM sessions WHERE room_id = $1 AND is_active = true`,
@@ -30,6 +32,7 @@ export async function handleAskQuestion(io:Server,socket: Socket, { user,questio
 
       for (const row of activeSessions.rows) {
         const existingTimeout = sessionTimeoutMap.get(row.id);
+        logger.info(`session ${row.id} in room ${row.room_id} cleared`)
         if (existingTimeout) {
           clearTimeout(existingTimeout);
           sessionTimeoutMap.delete(row.id);
@@ -47,6 +50,8 @@ export async function handleAskQuestion(io:Server,socket: Socket, { user,questio
       if (user.role !== adminId) return socket.emit("questionError", { message: "Only Game masters can ask questions" });
       const session = await client.query(`INSERT INTO sessions (is_active,room_id,gm_id,question,answer,end_time) values ($1,$2,$3,$4,$5,$6) RETURNING *`,
       [true,user.room_id,user.id,question,answer,endTime])
+      
+      logger.info(`new session created in room ${session.rows[0].room_id}`)
 
       await client.query("UPDATE members SET was_gm = true WHERE id =$1",[user.id])
       const numberOfSession = await client.query(`
@@ -62,15 +67,20 @@ export async function handleAskQuestion(io:Server,socket: Socket, { user,questio
 
       const existingTimeout = sessionTimeoutMap.get(session.rows[0].id);
       if (existingTimeout) {
+          logger.warn("session timeout already exists, clearing old timeout")
           clearTimeout(existingTimeout);
           sessionTimeoutMap.delete(session.rows[0].id);
       }
+
       const delay = Math.max(0, endTime - Date.now())
+
+      logger.info(`${delay/1000}s Game timeout started for session ${session.rows[0].id}`)
       const sessionTimeout = setTimeout(async () => {
         const timeoutClient = await pool.connect();
 
         try {
             await timeoutClient.query("BEGIN")
+            logger.info(`${session.rows[0].id} timed out`)
             const sessionActive = await timeoutClient.query(`
               SELECT id,room_id
               FROM sessions
@@ -92,7 +102,7 @@ export async function handleAskQuestion(io:Server,socket: Socket, { user,questio
 
         } catch (err) {
             await timeoutClient.query("ROLLBACK")
-            console.error(err);
+            logger.error(err);
         } finally {
             timeoutClient.release();
             sessionTimeoutMap.delete(session.rows[0].id);
@@ -105,7 +115,7 @@ export async function handleAskQuestion(io:Server,socket: Socket, { user,questio
 
   catch (error) {
       await client.query("ROLLBACK")
-      console.log(error)
+      logger.error(error)
       return  socket.emit("Error", { message: "Internal server error" });
   }
 
