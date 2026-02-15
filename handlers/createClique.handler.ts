@@ -70,17 +70,18 @@ isAdmin: boolean;}>){
             const newUserResult =  await client.query('INSERT INTO members (name, room_id, role,hex_code) VALUES ($1,$2,$3,$4) RETURNING *',[savedName,roomId,adminRoleId,color]);
 
             await client.query("COMMIT")
-
+            
             const newUser = newUserResult.rows[0];
+            const {was_gm,joined_at,...clientUser} = newUser
             const payload = {id:newUser.id,roomId: newUser.room_id}
             const token  = jwt.sign(payload,secret)
-            const {clique_key,was_gm,joined_at, ...newRoom} = {...createdRoom.rows[0],token}
+            const {clique_key, ...newRoom} = {...createdRoom.rows[0],token}
             socket.join(roomId);
             socketUserMap.set(socket.id,{userId:newUser.id,roomId,isAdmin:newUser.role === adminRoleId})
             socket.to(roomId).emit("userJoined",{ message:`${savedName} has joined the room`, savedName})
             console.log( `clique ${roomName} created by ${savedName}`);
             console.log("New room",newRoom)
-            socket.emit("CliqueCreated",{message:'Clique created',room:newRoom,user:newUser})
+            socket.emit("CliqueCreated",{message:'Clique created',room:newRoom,user:clientUser})
             return
         }
         catch (error:any) {

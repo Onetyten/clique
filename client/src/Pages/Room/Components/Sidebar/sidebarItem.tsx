@@ -1,9 +1,10 @@
 import { useSelector } from 'react-redux'
-import type { MemberType } from '../../../../types/types'
+import type { userType } from '../../../../types/types'
 import type { RootState } from '../../../../util/store'
+import { roleID } from '../../../../util/role'
 
 interface propType{
-     friend:MemberType
+     friend:userType
      sidebarOpened:boolean
 }
 
@@ -19,7 +20,7 @@ export default function SidebarItem({friend,sidebarOpened}:propType) {
                 {!sidebarOpened &&
                     <div className="flex gap-2 absolute bottom-0 right-0 items-center">
                         { user && friend.id === user.id && <div className="w-3 h-3 z-10 bg-accent-green rounded-full"></div> }
-                        { friend.role === 0 && <div className="w-3 h-3 absolute left-[2px] -bottom-[1px] z-0 bg-accent-blue rounded-full"></div>}
+                        { friend.role === roleID.admin && <div className="w-3 h-3 absolute right-0 z-0 bg-accent-blue rounded-full"></div>}
                     </div>
                 }
 

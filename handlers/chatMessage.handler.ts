@@ -1,7 +1,7 @@
 import { Socket } from "socket.io";
 import { ChatType } from "../types/type";
+import { SendMessage } from "../services/chat.service";
 
 export async function handleChatMessage(socket: Socket, { user,message,timeStamp }: ChatType) {
-  socket.to(user.room_id).emit("messageSent", { user, message, timeStamp });
-  return socket.emit("messageSuccess",{ user, message, timeStamp });
+  SendMessage(socket,user,message,timeStamp,"chat")
 }

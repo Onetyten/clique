@@ -10,7 +10,6 @@ const sessionSchema = Joi.object({
         answer:Joi.string().required(),
         end_time:Joi.number().integer().required(),
     },
-    isAnswer:Joi.boolean(),
     user:{
         id: Joi.string().guid({version:'uuidv4'}).required(),
         name: Joi.string().required(),

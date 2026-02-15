@@ -17,9 +17,10 @@ interface propType{
     setChatMode:React.Dispatch<React.SetStateAction<"chat" | "answer">>
     showMessageLoader:boolean
     setShowMessageLoader: React.Dispatch<React.SetStateAction<boolean>>
+    setShowQuestionForm: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-export default function MessageBar({isAdmin,setChatMode,chatMode,setShowMessageLoader}:propType) {
+export default function MessageBar({isAdmin,setChatMode,chatMode,setShowMessageLoader,setShowQuestionForm}:propType) {
     const [message,setMessage] = useState("")
     const user = useSelector((state:RootState)=>state.user.user)
     const dispatch = useDispatch()
@@ -31,7 +32,6 @@ export default function MessageBar({isAdmin,setChatMode,chatMode,setShowMessageL
             user:sender,
             message,
             timeStamp:Date.now()
-        
         };
         const newMessage:newMessageType = { ...payload,type: "chat" }
         dispatch(addMessage(newMessage))
@@ -63,7 +63,8 @@ export default function MessageBar({isAdmin,setChatMode,chatMode,setShowMessageL
                 
             </div>
 
-            {isAdmin && <div className="text-accent-blue items-center gap-2 flex cursor-pointer">
+            {isAdmin && 
+            <div  onClick={()=>setShowQuestionForm(true)} className="text-accent-blue items-center gap-2 flex cursor-pointer">
                 <Zap/>
                 <p className="text-sm">New question</p>
             </div>}

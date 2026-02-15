@@ -4,6 +4,7 @@ import storageSession from './storageSession'
 import userReducer from "../store/userSlice" 
 import roomReducer from "../store/roomSlice" 
 import messageReducer from "../store/messageSlice" 
+import sessionReducer from "../store/sessionSlice" 
 
 const persistConfig = {
     key:'root',
@@ -16,6 +17,7 @@ const reducer = combineReducers({
     user: userReducer,
     room: roomReducer,
     messages: messageReducer,
+    session:sessionReducer,
 })
 
 const persistedReducer = persistReducer(persistConfig,reducer)

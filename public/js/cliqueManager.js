@@ -335,33 +335,7 @@ function setPulserColor(colorClass) {
 }
 
 
-function HandleQuestionAsked(data){
-    inSession = true
-    currentSession = data.session
-    renderQuestionInText(data.session)
-    sessionStorage.setItem('currentSession',JSON.stringify(currentSession))
-    countdownContainer.classList.remove("text-error")
-    countdownContainer.classList.add("text-accent-green")
-    gameQuestionCtn.classList.remove("hidden")
-    gameQuestionCtn.classList.add("flex")
-    gameQuestionEl.textContent = data.session.question
-    questionInterval = setInterval(()=>{
-        const timeLeft = data.session.end_time - Date.now()
 
-        if (timeLeft<=0) return questionTimedOut(data)
-        if (timeLeft<30000 && timeLeft>10000){
-            setPulserColor("bg-warning");
-            countdownContainer.classList.remove("text-accent-green")
-            countdownContainer.classList.add("text-warning")
-        }
-        else if(timeLeft<10000){
-            setPulserColor("bg-error");
-            countdownContainer.classList.remove("text-warning")
-            countdownContainer.classList.add("text-error")
-        }
-        countdownEl.textContent = (timeLeft/1000).toFixed(0)
-    },1000)
-}
 
 function renderQuestionInText(session) {
     const isMe = session.id === user.id;
@@ -423,6 +397,34 @@ socket.on("questionSuccess",(data)=>{
 socket.on("questionAsked",(data)=>{
     HandleQuestionAsked(data)
 })
+
+function HandleQuestionAsked(data){
+    inSession = true
+    currentSession = data.session
+    renderQuestionInText(data.session)
+    sessionStorage.setItem('currentSession',JSON.stringify(currentSession))
+    countdownContainer.classList.remove("text-error")
+    countdownContainer.classList.add("text-accent-green")
+    gameQuestionCtn.classList.remove("hidden")
+    gameQuestionCtn.classList.add("flex")
+    gameQuestionEl.textContent = data.session.question
+    questionInterval = setInterval(()=>{
+        const timeLeft = data.session.end_time - Date.now()
+
+        if (timeLeft<=0) return questionTimedOut(data)
+        if (timeLeft<30000 && timeLeft>10000){
+            setPulserColor("bg-warning");
+            countdownContainer.classList.remove("text-accent-green")
+            countdownContainer.classList.add("text-warning")
+        }
+        else if(timeLeft<10000){
+            setPulserColor("bg-error");
+            countdownContainer.classList.remove("text-warning")
+            countdownContainer.classList.add("text-error")
+        }
+        countdownEl.textContent = (timeLeft/1000).toFixed(0)
+    },1000)
+}
 
 socket.on("questionError", (data) => {
     questionFormCleanup()

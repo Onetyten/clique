@@ -4,8 +4,8 @@ import { roleID } from "../config/role"
 
 export async function assignNextAdmin(client:PoolClient,roomId: string,excludeUserId: string) {
 
-  const guestID = roleID.guest
-  const adminID = roleID.admin
+  const guestID = Number(roleID.guest)
+  const adminID = Number(roleID.admin)
 
 
   let newAdminResult = await client.query( 
@@ -40,10 +40,9 @@ export async function assignNextAdmin(client:PoolClient,roomId: string,excludeUs
   }
 
   const newAdmin = newAdminResult.rows[0]
-
   await client.query(
     `UPDATE members
-    SET role = CASE WHEN id = $1 THEN $2 ELSE $3 END,
+    SET role = CASE WHEN id = $1 THEN $2::smallint ELSE $3::smallint END,
     was_gm = CASE WHEN id = $1 THEN true ELSE was_gm END
     WHERE room_id = $4`,
     [newAdmin.id, adminID, guestID, roomId]

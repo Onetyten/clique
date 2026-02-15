@@ -30,7 +30,6 @@ export interface RoomType {
 export interface ChatType {
   user: ChatUserType; 
   message: string;
-  color:string;
   timeStamp: number;
 }
 

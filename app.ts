@@ -10,11 +10,11 @@ import { handleJoinClique } from './handlers/joinClique.handler';
 import fetchGuestRoute from './routes/guest/fetchGuests.route'
 import { handleChatMessage } from './handlers/chatMessage.handler';
 import { handleAskQuestion } from './handlers/AskQuestion.handler';
-import { WrongAnswerMessage } from './handlers/incorrectAnswer.handler';
-import { handleSessionOver } from './handlers/handleSessionOver';
+import { handleQuestionAnswered } from './handlers/questionAnswered.handler';
 import { handleDisconnect } from './handlers/disconnectHandler';
 import { handleRejoinClique } from './handlers/rejoinClique.handler';
 import { handleValidateToken } from './handlers/handleValidateToken.handler';
+import { endExpiredSessionOnStart } from './services/session.service';
 
 
 const rootDir = path.basename(__dirname) === "dist"?path.join(__dirname,".."):__dirname
@@ -64,19 +64,20 @@ const io = new Server(server,{
 })
 
 const socketUserMap = new Map<string,{userId:string,roomId:string,isAdmin:boolean}>()
+const sessionTimeoutMap = new Map<string, ReturnType<typeof setTimeout>>()
 
 
-
-io.on("connection",(socket:Socket)=>{
+io.on("connection",async (socket:Socket)=>{
     console.log("A user connected",socket.id)
+    endExpiredSessionOnStart(socket)
+
     socket.on("CreateClique",(data)=>handleCreateClique(socket,data,socketUserMap))
     socket.on("joinClique",(data)=>handleJoinClique(socket,data,socketUserMap))
     socket.on("rejoinClique",(data)=>handleRejoinClique(socket,data,socketUserMap))
     socket.on("validateToken",(data)=>handleValidateToken(socket,data,socketUserMap))
     socket.on("ChatMessage",(data)=>handleChatMessage(socket,data))
-    socket.on("answeredIncorrectly",(data)=>WrongAnswerMessage(socket,data))
-    socket.on("askQuestion",(data)=>handleAskQuestion(socket,data))
-    socket.on("sessionOver",(data)=>handleSessionOver(io,socket,data))
+    socket.on("askQuestion",(data)=>handleAskQuestion(io,socket,data,sessionTimeoutMap))
+    socket.on("questionAnswered",(data)=>handleQuestionAnswered(io,socket,data,sessionTimeoutMap))
     socket.on("disconnect",async (reason)=>handleDisconnect(socket,reason,socketUserMap,))
 })
 
