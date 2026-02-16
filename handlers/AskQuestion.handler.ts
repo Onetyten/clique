@@ -21,6 +21,7 @@ export async function handleAskQuestion(io:Server,socket: Socket, { user,questio
       
       if (gameRoom.rows[0].count < 2 ){
         socket.emit("questionError", { message: "There must be at least two players to start a game session" });
+        return
       }
 
       let adminId: number = roleID.admin;
