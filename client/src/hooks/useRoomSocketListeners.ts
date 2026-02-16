@@ -8,6 +8,7 @@ import { toast } from "react-toastify"
 import { addMessage, type newMessageType } from "../store/messageSlice"
 import { clearSession, setSession } from "../store/sessionSlice"
 import { setUser } from "../store/userSlice"
+import store from "../util/store"
 
 type FetchGuestsResponse = {
     members: userType[];
@@ -15,12 +16,15 @@ type FetchGuestsResponse = {
 
 export default function useRoomSocketListeners(){
     const user = useSelector((state:RootState)=>state.user.user)
+    const session  = useSelector((state:RootState)=>state.session.session)
     const room = useSelector((state:RootState)=>state.room.room)
     const [friendList,setFriendList] = useState<userType[]>([])
     const [questionLoading,setQuestionLoading] = useState(false)
     const [showBanner,setShowBanner] = useState(false)
     const [roundCount,setRoundCount] = useState(1)
     const dispatch = useDispatch()
+    const [timeLeft,setTimeleft] = useState<number>(60)
+    const [showQuestionForm,setShowQuestionForm] = useState(false)
 
 
     async function getFriendList () {
@@ -44,7 +48,21 @@ export default function useRoomSocketListeners(){
     // eslint-disable-next-line react-hooks/exhaustive-deps
     },[])
 
-
+    useEffect(() => {
+        if (!session) return
+        const interval = setInterval(() => {
+            setTimeleft(prev => {
+                if (prev <= 0) {
+                    dispatch(clearSession())
+                    clearInterval(interval)
+                    return 0
+                }
+                return prev - 1
+            })
+        }, 1000)
+        return () => clearInterval(interval)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [session])
     
     useEffect(()=>{
         if (room && user) {
@@ -58,7 +76,7 @@ export default function useRoomSocketListeners(){
         });
 
         socket.on("messageSent",(data)=>{
-            const newMessage:newMessageType = { ...data,type: "chat" }
+            const newMessage:newMessageType = data
             dispatch(addMessage(newMessage))            
         })
 
@@ -75,6 +93,7 @@ export default function useRoomSocketListeners(){
         })
 
         socket.on("questionAsked", (data) => {
+            setShowQuestionForm(false)
             dispatch(setSession(data.session))
             setRoundCount(data.roundNum)
             setShowBanner(true)
@@ -88,6 +107,11 @@ export default function useRoomSocketListeners(){
             toast.info(data.adminMessage)
             getFriendList()
         })
+        socket.on("gameTimeSync", (data) => {
+            const session = store.getState().session.session
+            if ( !session || (session.id !== data.sessionId)) return
+            setTimeleft(data.timeRemaining)
+        })
         
         return () => {
             socket.off("reconnect")
@@ -97,9 +121,10 @@ export default function useRoomSocketListeners(){
             socket.off("questionError")
             socket.off("questionAsked")
             socket.off("timeoutHandled")
+            socket.off("gameTimeSync")
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     },[])
 
-    return{friendList,setQuestionLoading,questionLoading,roundCount,showBanner}
+    return{friendList,setQuestionLoading,questionLoading,roundCount,showBanner,timeLeft,showQuestionForm,setShowQuestionForm}
 }

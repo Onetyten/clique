@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import type { RootState } from '../../../util/store'
 import { socket } from '../../../util/socket'
 import { addMessage, type newMessageType } from '../../../store/messageSlice'
+import { toast } from 'react-toastify'
 
 interface propType{
     isAdmin:boolean
@@ -23,6 +24,7 @@ interface propType{
 export default function MessageBar({isAdmin,setChatMode,chatMode,setShowMessageLoader,setShowQuestionForm}:propType) {
     const [message,setMessage] = useState("")
     const user = useSelector((state:RootState)=>state.user.user)
+    const session = useSelector((state:RootState)=>state.session.session)
     const dispatch = useDispatch()
 
     function chatMessage(){
@@ -38,17 +40,47 @@ export default function MessageBar({isAdmin,setChatMode,chatMode,setShowMessageL
         socket.emit("ChatMessage", payload);
         setShowMessageLoader(true)
     }
+
+    function answerMessage(){
+        if (!user) return
+        if (!session){
+            setChatMode("chat")
+            toast.info("Please wait until the game starts before answering")
+            return
+        }
+        
+        const payload = {
+            currentSession:session,
+            user:user,
+            answer:message,
+            timeStamp:Date.now()
+        };
+
+        socket.emit("questionAnswered",payload);
+        const {score,...sender} = {...user};
+        const messagePayload = { user:sender,message, timeStamp:Date.now() };
+
+        if (message.toLowerCase().trim() === session.answer.toLowerCase().trim()){
+            const newMessage:newMessageType = { ...messagePayload,type: "correct" };
+            dispatch(addMessage(newMessage));
+        }
+        else{
+            const newMessage:newMessageType = { ...messagePayload, type: "wrong" };
+            dispatch(addMessage(newMessage));
+        }
+
+    }
     
     function submitMessage(e:FormEvent){
-        e.preventDefault()
-        if (message.trim().length===0) return
-        if (chatMode==="chat") chatMessage()    
-        setMessage("")
+        e.preventDefault();
+        if (message.trim().length===0) return;
+        if (chatMode==="chat") chatMessage() ;
+        else if (chatMode==="answer") answerMessage();
+        setMessage("");
     }
 
-
   return (
-    <div className="bg-background-100 w-full flex flex-col gap-2 px-2 sm:px-6">
+    <div className="bg-background-100 relative z-10  w-full flex flex-col gap-2 px-2 sm:px-6">
         <div className="left-8 top-3.5 flex items-center justify-between gap-4 text-xl sm:text-2xl" >
             <div className="flex items-center gap-4">
                 <div onClick={()=>{setChatMode("chat")}} className={`flex items-center gap-2 cursor-pointer ${chatMode==="chat"?"text-accent-blue":"text-text-muted"} `}>
@@ -63,7 +95,7 @@ export default function MessageBar({isAdmin,setChatMode,chatMode,setShowMessageL
                 
             </div>
 
-            {isAdmin && 
+            {isAdmin && !session &&  
             <div  onClick={()=>setShowQuestionForm(true)} className="text-accent-blue items-center gap-2 flex cursor-pointer">
                 <Zap/>
                 <p className="text-sm">New question</p>
