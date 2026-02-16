@@ -15,35 +15,19 @@ import QuestionBar from "./Components/QuestionBar/QuestionBar";
 export default function Room() {
     const user = useSelector((state:RootState)=>state.user.user)
     const session = useSelector((state:RootState)=>state.session.session)
-    const {friendList,setQuestionLoading,questionLoading,roundCount,showBanner} = useRoomSocketListeners()
+    const {friendList,setQuestionLoading,questionLoading,roundCount,showBanner,timeLeft,showQuestionForm,setShowQuestionForm} = useRoomSocketListeners()
     const isAdmin = user?.role === roleID.admin
     const [canAnswer,setCanAnswer] = useState(false)
     const [chatMode,setChatMode] = useState<"chat" | "answer">("chat")
     const role = user?.role
     const [triesLeft,setTriesLeft] = useState(0)
     const [showMessageLoader,setShowMessageLoader] = useState(false)
-    const [showQuestionForm,setShowQuestionForm] = useState(false)
-    const [timeLeft,setTimeleft] = useState<number>(60)
-    
 
     useEffect(()=>{
         if (role === roleID.admin){
             setChatMode("chat")
         }
     },[role])
-
-    useEffect(()=>{
-        if (!session) return
-        const interval = setInterval(()=>{
-            const remaining  = Math.floor((session.end_time-Date.now())/1000)
-            if (remaining <= 0) {
-                setTimeleft(0)
-                return
-            }
-            setTimeleft(remaining)
-        },1000)
-        return ()=> clearInterval(interval)
-    },[session])
 
 return (
     <main className="bg-background-100 w-screen max-w-screen h-dvh flex">
@@ -55,7 +39,7 @@ return (
             {session && <QuestionBar timeLeft = {timeLeft} /> }
 
             <div className="absolute inset-0 pointer-events-none blur-3xl opacity-20 flex justify-center items-center z-0 overflow-hidden">
-                <div id="pulser" className="blob bg-accent-blue w-80 h-80 rounded-full animate-pulse"></div>
+                <div id="pulser" className={`bg-accent-blue ${!session?"bg-accent-blue":timeLeft<10?"bg-error":timeLeft<20?"bg-warning":"bg-accent-blue"} w-80 h-80 rounded-full animate-pulse`}></div>
             </div>
 
             <ChatContainer/>

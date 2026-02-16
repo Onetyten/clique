@@ -6,7 +6,7 @@ export default function ChatContainer() {
     const user = useSelector((state:RootState)=>state.user.user)
 
   return (
-    <div className="flex-1 w-full overflow-y-auto hide-scrollbar p-2 sm:p-6 space-y-2">
+    <div className="flex-1 w-full relative z-10 overflow-y-auto hide-scrollbar p-2 sm:p-6 space-y-2">
         <div id="chatContainer" className="flex-1 sm:text-xs text-base pb-20 w-full overflow-y-auto hide-scrollbar space-y-2">
             {messages.map((item,index)=>{
                 return(
