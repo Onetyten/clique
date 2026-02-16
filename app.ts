@@ -80,7 +80,7 @@ const io = new Server(server,{
 })
 
 const socketUserMap = new Map<string,{userId:string,roomId:string,isAdmin:boolean}>()
-const sessionTimeoutMap = new Map<string, ReturnType<typeof setTimeout>>()
+const sessionTimeoutMap = new Map<string, {timeout: ReturnType<typeof setTimeout>, interval: ReturnType<typeof setInterval>}>()
 
 
 io.on("connection",async (socket:Socket)=>{

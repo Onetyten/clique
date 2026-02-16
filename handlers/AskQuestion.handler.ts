@@ -13,7 +13,7 @@ interface QuestionType{
   endTime: number
 } 
 
-export async function handleAskQuestion(io:Server,socket: Socket, { user,question,answer, endTime }: QuestionType,sessionTimeoutMap: Map<string, NodeJS.Timeout>) {
+export async function handleAskQuestion(io:Server,socket: Socket, { user,question,answer, endTime }: QuestionType,sessionTimeoutMap: Map<string, { timeout: NodeJS.Timeout; interval: ReturnType<typeof setInterval>;}>) {
 
   const client = await pool.connect()
   try {
@@ -27,7 +27,8 @@ export async function handleAskQuestion(io:Server,socket: Socket, { user,questio
       if (user.role !== adminId) return socket.emit("questionError", { message: "Only Game masters can ask questions" });
       const timestamp = endTime-(60*1000)
 
-      SendMessage(socket,user,question,timestamp,"question")
+      const questionMessage = `Question : ${question}`
+      SendMessage(socket,user,questionMessage,timestamp,"question")
 
       const session = await client.query(`INSERT INTO sessions (is_active,room_id,gm_id,question,answer,end_time) values ($1,$2,$3,$4,$5,$6) RETURNING *`, [true,user.room_id,user.id,question,answer,endTime])
 
@@ -49,11 +50,12 @@ export async function handleAskQuestion(io:Server,socket: Socket, { user,questio
       );
 
       for (const row of activeSessions.rows) {
-        const existingTimeout = sessionTimeoutMap.get(row.id);
-        logger.info(`session ${row.id} in room ${row.room_id} cleared`)
-        if (existingTimeout) {
-          clearTimeout(existingTimeout);
+        const existing = sessionTimeoutMap.get(row.id);
+        if (existing) {
+          clearTimeout(existing.timeout);
+          clearInterval(existing.interval);
           sessionTimeoutMap.delete(row.id);
+          logger.info(`Cleared timeout and interval for session ${row.id}`)
         }
       }
 
@@ -68,10 +70,11 @@ export async function handleAskQuestion(io:Server,socket: Socket, { user,questio
 
       await client.query("COMMIT")
 
-      const existingTimeout = sessionTimeoutMap.get(session.rows[0].id);
-      if (existingTimeout) {
-          logger.warn("session timeout already exists, clearing old timeout")
-          clearTimeout(existingTimeout);
+      const existingTimers = sessionTimeoutMap.get(session.rows[0].id);
+      if (existingTimers) {
+          logger.warn("session timers already exist, clearing old timers")
+          clearTimeout(existingTimers.timeout);
+          clearInterval(existingTimers.interval);
           sessionTimeoutMap.delete(session.rows[0].id);
       }
       const delay = Math.max(0, endTime - Date.now())
@@ -130,7 +133,7 @@ export async function handleAskQuestion(io:Server,socket: Socket, { user,questio
             sessionTimeoutMap.delete(session.rows[0].id);
         }
     }, delay);  
-    sessionTimeoutMap.set(session.rows[0].id,sessionTimeout)  
+    sessionTimeoutMap.set(session.rows[0].id,{timeout:sessionTimeout,interval:syncInterval})  
 
 
   } 

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react"
 import { socket } from "../util/socket"
 import type { RootState } from "../util/store"
@@ -15,19 +16,27 @@ type FetchGuestsResponse = {
 };
 
 export default function useRoomSocketListeners(){
-    const user = useSelector((state:RootState)=>state.user.user)
     const session  = useSelector((state:RootState)=>state.session.session)
-    const room = useSelector((state:RootState)=>state.room.room)
     const [friendList,setFriendList] = useState<userType[]>([])
     const [questionLoading,setQuestionLoading] = useState(false)
     const [showBanner,setShowBanner] = useState(false)
     const [roundCount,setRoundCount] = useState(1)
     const dispatch = useDispatch()
+    const TOTAL_TRIES = 3
+    const [triesLeft,setTriesLeft]  = useState(TOTAL_TRIES)
     const [timeLeft,setTimeleft] = useState<number>(60)
+    const [bannerMessage,setBannerMessage] = useState(`${roundCount}`)
     const [showQuestionForm,setShowQuestionForm] = useState(false)
 
+    async function sessionCleanUp() {
+        setTriesLeft(TOTAL_TRIES)
+        setShowQuestionForm(false)
+        setQuestionLoading(false)
+    }
 
     async function getFriendList () {
+        const room = store.getState().room.room
+        const user = store.getState().user.user
         if (!room || !user) return
         try {
             const res = await api.get<FetchGuestsResponse>(`/room/guests/fetch/${encodeURIComponent(room.id)}`)
@@ -49,82 +58,114 @@ export default function useRoomSocketListeners(){
     },[])
 
     useEffect(() => {
-        if (!session) return
+        if (!session) return;
         const interval = setInterval(() => {
             setTimeleft(prev => {
-                if (prev <= 0) {
-                    dispatch(clearSession())
-                    clearInterval(interval)
-                    return 0
+                if (prev <= 1) {
+                    clearInterval(interval);
+                    dispatch(clearSession());
+                    setBannerMessage("Time's Up");
+                    setShowBanner(true);
+                    return 0;
                 }
-                return prev - 1
-            })
-        }, 1000)
-        return () => clearInterval(interval)
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [session])
-    
+    }, [session]);
+
+    useEffect(() => {
+        if (!showBanner) return;
+        const timeout = setTimeout(() => {
+            setShowBanner(false);
+        }, 3000);
+
+        return () => clearTimeout(timeout);
+    }, [showBanner]);
+
+
     useEffect(()=>{
-        if (room && user) {
+
+        const validateToken = () => {
+            const room = store.getState().room.room
+            const user = store.getState().user.user
             if (room && user && room.token) {
-                socket.emit("validateToken", {cliqueName: room.name,username: user.name, token:room.token })
+                socket.emit("validateToken", { cliqueName: room.name, username: user.name, token: room.token})
             }
         }
-        socket.on("userJoined", (data) => {
-            toast.info(data.message);
+
+        validateToken()
+        socket.on("reconnect", validateToken)
+        
+
+        const handleUserJoined = (data: any) => {
+            toast.info(data.message)
             getFriendList()
-        });
+        }
+        socket.on("userJoined", handleUserJoined)
 
-        socket.on("messageSent",(data)=>{
-            const newMessage:newMessageType = data
-            dispatch(addMessage(newMessage))            
-        })
+        const handleMessageSent = (data: any) => {
+            const newMessage: newMessageType = data
+            dispatch(addMessage(newMessage))
+        }
+        socket.on("messageSent", handleMessageSent)
 
-        socket.on("reconnect", () => {
-            if (room && user && room.token) {
-                socket.emit("validateToken", {cliqueName: room.name, username: user.name, token: room.token})
-            }
-        })
-
-        socket.on("questionError", (data) => {
+        const handleQuestionError = (data: any) => {
             dispatch(clearSession())
             setQuestionLoading(false)
-            toast.warn(data.message);
-        })
+            toast.warn(data.message)
+        }
+        socket.on("questionError", handleQuestionError)
 
-        socket.on("questionAsked", (data) => {
-            setShowQuestionForm(false)
+        const handleQuestionAsked = (data: any) => {
+            console.log("question ask triggered from server", data)
+            sessionCleanUp()
             dispatch(setSession(data.session))
             setRoundCount(data.roundNum)
+            setBannerMessage(`Round ${data.roundNum} - Let’s Go!`)
             setShowBanner(true)
-            setTimeout(()=>{
-                setShowBanner(false)
-            },2000)
-        })
+        }
+        socket.on("questionAsked", handleQuestionAsked)
 
-        socket.on("timeoutHandled", (data) => {
+        const handleTimeoutHandled = (data: any) => {
+            sessionCleanUp()
             dispatch(clearSession())
             toast.info(data.adminMessage)
             getFriendList()
-        })
-        socket.on("gameTimeSync", (data) => {
-            const session = store.getState().session.session
-            if ( !session || (session.id !== data.sessionId)) return
+        }
+         socket.on("timeoutHandled", handleTimeoutHandled)
+
+        const handleAnswerCorrect = (data: any) => {
+            sessionCleanUp()
+            dispatch(clearSession())
+            getFriendList()
+            setBannerMessage(data.message)
+            setShowBanner(true)
+        }
+
+        socket.on("answerCorrect", handleAnswerCorrect)
+
+        const handleGameTimeSync = (data: any) => {
+            const currentSession = store.getState().session.session
+            if (!currentSession || (currentSession.id !== data.sessionId)) return
             setTimeleft(data.timeRemaining)
-        })
+        }
+        socket.on("gameTimeSync", handleGameTimeSync)        
         
         return () => {
-            socket.off("reconnect")
-            socket.off("validateToken")
-            socket.off("userJoined")
-            socket.off("messageSent")
-            socket.off("questionError")
-            socket.off("questionAsked")
-            socket.off("timeoutHandled")
-            socket.off("gameTimeSync")
+            socket.off("reconnect", validateToken)
+            socket.off("userJoined", handleUserJoined)
+            socket.off("messageSent", handleMessageSent)
+            socket.off("questionError", handleQuestionError)
+            socket.off("questionAsked", handleQuestionAsked)
+            socket.off("timeoutHandled", handleTimeoutHandled)
+            socket.off("gameTimeSync", handleGameTimeSync)
+            socket.off("answerCorrect", handleAnswerCorrect)
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    },[])
+    }, [dispatch])
 
-    return{friendList,setQuestionLoading,questionLoading,roundCount,showBanner,timeLeft,showQuestionForm,setShowQuestionForm}
+    return{friendList,setQuestionLoading,questionLoading,roundCount,bannerMessage,showBanner,timeLeft,showQuestionForm,setShowQuestionForm,triesLeft,setTriesLeft}
 }

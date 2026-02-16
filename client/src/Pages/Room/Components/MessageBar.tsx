@@ -21,7 +21,7 @@ interface propType{
     setShowQuestionForm: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-export default function MessageBar({isAdmin,setChatMode,chatMode,setShowMessageLoader,setShowQuestionForm}:propType) {
+export default function MessageBar({isAdmin,setChatMode,chatMode,setShowMessageLoader,setShowQuestionForm,triesLeft,setTriesLeft}:propType) {
     const [message,setMessage] = useState("")
     const user = useSelector((state:RootState)=>state.user.user)
     const session = useSelector((state:RootState)=>state.session.session)
@@ -48,6 +48,14 @@ export default function MessageBar({isAdmin,setChatMode,chatMode,setShowMessageL
             toast.info("Please wait until the game starts before answering")
             return
         }
+        if (triesLeft<=0){
+            toast.warn("You have used up your attempts ")
+            return
+        }
+
+        const newTries = triesLeft - 1;
+        setTriesLeft(newTries);
+
         
         const payload = {
             currentSession:session,
@@ -64,11 +72,13 @@ export default function MessageBar({isAdmin,setChatMode,chatMode,setShowMessageL
             const newMessage:newMessageType = { ...messagePayload,type: "correct" };
             dispatch(addMessage(newMessage));
         }
+        
         else{
             const newMessage:newMessageType = { ...messagePayload, type: "wrong" };
             dispatch(addMessage(newMessage));
+            toast.warn(`You have ${newTries} attempt${newTries>1?"s":""} `)
+            
         }
-
     }
     
     function submitMessage(e:FormEvent){
@@ -94,6 +104,11 @@ export default function MessageBar({isAdmin,setChatMode,chatMode,setShowMessageL
                 </div>}
                 
             </div>
+
+            {!isAdmin && session &&  
+            <div  onClick={()=>setShowQuestionForm(true)} className="text-white items-center gap-2 flex cursor-pointer">
+                {Array.from({length:triesLeft}).map(()=><Zap size={18}/>)}
+            </div>}
 
             {isAdmin && !session &&  
             <div  onClick={()=>setShowQuestionForm(true)} className="text-accent-blue items-center gap-2 flex cursor-pointer">
