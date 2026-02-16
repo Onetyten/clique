@@ -120,6 +120,7 @@ export default function useRoomSocketListeners(){
         socket.on("questionError", handleQuestionError)
 
         const handleQuestionAsked = (data: any) => {
+            setTimeleft(60)
             console.log("question ask triggered from server", data)
             sessionCleanUp()
             dispatch(setSession(data.session))
