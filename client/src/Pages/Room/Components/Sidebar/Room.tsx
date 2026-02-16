@@ -10,14 +10,11 @@ import MessageBar from "./Components/MessageBar";
 import ChatContainer from "./Components/ChatContainer/ChatContainer";
 import QuestionForm from "./Components/QuestionForm/QuestionForm";
 import QuestionBar from "./Components/QuestionBar/QuestionBar";
-import MobileToolbar from "./Components/Sidebar/MobileToolbar";
-import MobileSidebar from "./Components/Sidebar/MobileSidebar";
 
 
 export default function Room() {
     const user = useSelector((state:RootState)=>state.user.user)
     const session = useSelector((state:RootState)=>state.session.session)
-    const [sidebarOpened,setOpenSidebar] = useState(false)
     const {friendList,setQuestionLoading,questionLoading,bannerMessage,triesLeft,setTriesLeft,showBanner,timeLeft,showQuestionForm,setShowQuestionForm} = useRoomSocketListeners()
     const isAdmin = user?.role === roleID.admin
     const [canAnswer,setCanAnswer] = useState(false)
@@ -32,14 +29,14 @@ export default function Room() {
     },[role])
 
 return (
-    <main className="bg-background-100 w-screen max-w-screen h-dvh flex" >
-        <Sidebar friendList={friendList} sidebarOpened={sidebarOpened} setOpenSidebar={setOpenSidebar}/>
+    <main className="bg-background-100 w-screen max-w-screen h-dvh flex flex-col sm:flex-row" >
+        <Sidebar friendList={friendList}/>
         
+
+
         {showBanner && <Banner bannerMessage={bannerMessage}/>}
 
-        <div className="relative min-h-dvh bg-background-100 flex-1 flex flex-col w-full">
-            <MobileToolbar timeLeft={timeLeft} setOpenSidebar={setOpenSidebar}/>
-            {sidebarOpened && <MobileSidebar friendList={friendList} sidebarOpened={sidebarOpened} setOpenSidebar={setOpenSidebar}/>}
+        <div className="relative min-h-dvh flex-1 flex flex-col w-full">
 
             {session && <QuestionBar timeLeft = {timeLeft} /> }
 

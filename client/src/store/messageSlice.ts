@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { createSlice, nanoid, type PayloadAction } from "@reduxjs/toolkit";
 import type { messageType } from "../types/types";
 
