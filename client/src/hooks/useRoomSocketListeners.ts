@@ -10,10 +10,43 @@ import { addMessage, type newMessageType } from "../store/messageSlice"
 import { clearSession, setSession } from "../store/sessionSlice"
 import { setUser } from "../store/userSlice"
 import store from "../util/store"
+import joinAudio from "/public/Audio/join.mp3"
+import pointObtainedAudio from "/public/Audio/points-obtained.mp3"
+import confetti from "canvas-confetti";
+
+
+
+
+
+
+
+export function victoryConfetti() {
+  const duration = 5 * 1000;
+  const end = Date.now() + duration;
+
+  const colors = ["#5865F2", "#57F287"];
+  (function frame() {
+    confetti({ particleCount: 2, angle: 60, spread: 55, origin: { x: 0 }, colors, });
+
+    confetti({ particleCount: 2,angle: 120, spread: 55, origin: { x: 1 }, colors, });
+
+    if (Date.now() < end) {
+      requestAnimationFrame(frame);
+    }
+  })();
+}
+
 
 type FetchGuestsResponse = {
     members: userType[];
 };
+
+    export const playSound = (sound:string,volume:number) => {
+        const audio = new Audio(sound);
+        audio.volume = volume; 
+        audio.play();
+    };
+
 
 export default function useRoomSocketListeners(){
     const session  = useSelector((state:RootState)=>state.session.session)
@@ -27,6 +60,7 @@ export default function useRoomSocketListeners(){
     const [timeLeft,setTimeleft] = useState<number>(60)
     const [bannerMessage,setBannerMessage] = useState(`${roundCount}`)
     const [showQuestionForm,setShowQuestionForm] = useState(false)
+
 
     async function sessionCleanUp() {
         setTriesLeft(TOTAL_TRIES)
@@ -94,12 +128,13 @@ export default function useRoomSocketListeners(){
                 socket.emit("validateToken", { cliqueName: room.name, username: user.name, token: room.token})
             }
         }
-        
+
         validateToken()
         socket.on("reconnect", validateToken)
         
 
         const handleUserJoined = (data: any) => {
+            playSound(joinAudio,1.0)
             toast.info(data.message)
             getFriendList()
         }
@@ -120,7 +155,6 @@ export default function useRoomSocketListeners(){
 
         const handleQuestionAsked = (data: any) => {
             setTimeleft(59)
-            console.log("question ask triggered from server", data)
             sessionCleanUp()
             dispatch(setSession(data.session))
             setRoundCount(data.roundNum)
@@ -138,11 +172,19 @@ export default function useRoomSocketListeners(){
          socket.on("timeoutHandled", handleTimeoutHandled)
 
         const handleAnswerCorrect = (data: any) => {
+            const user = store.getState().user.user
             sessionCleanUp()
             dispatch(clearSession())
             getFriendList()
             setBannerMessage(data.message)
             setShowBanner(true)
+            playSound(pointObtainedAudio,1)
+            if (data.correctUser.id === user?.id){
+                victoryConfetti()
+            }
+            
+            
+
         }
 
         socket.on("answerCorrect", handleAnswerCorrect)

@@ -14,6 +14,7 @@
     "@reduxjs/toolkit": "^2.11.2",
     "@tailwindcss/vite": "^4.1.18",
     "axios": "^1.13.4",
+    "canvas-confetti": "^1.9.4",
     "gsap": "^3.14.2",
     "lucide-react": "^0.563.0",
     "react": "^19.2.0",

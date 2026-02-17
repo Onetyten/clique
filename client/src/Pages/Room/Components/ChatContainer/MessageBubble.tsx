@@ -3,11 +3,15 @@ import { Zap } from 'lucide-react'
 import type { messageType } from '../../../../types/types'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import { useDispatch } from 'react-redux'
 import { messageAnimated } from '../../../../store/messageSlice'
 import messageSentAudio from "/public/Audio/message-sent.mp3"
 import messageReceiptAudio from "/public/Audio/message-received.mp3"
+import wrongMessageAudio from "/public/Audio/wrong-answer.mp3"
+import correctMessageAudio from "/public/Audio/correct-message.mp3"
+import answerAudio from "/public/Audio/answer-timeout.mp3"
+import { playSound } from '../../../../hooks/useRoomSocketListeners'
 
 
 gsap.registerPlugin(useGSAP)
@@ -27,13 +31,6 @@ export default function MessageBubble({userId,text}:propType) {
     const isWrong = text.type==="wrong"
     const isCorrect = text.type === "correct"
     const bubbleRef = useRef<HTMLDivElement | null >(null)
-    const audioRef = useRef<HTMLAudioElement | null >(null)
-    const messageSound = isMe?messageSentAudio:messageReceiptAudio
-
-    useEffect(()=>{
-        audioRef.current = new Audio(messageSound)
-        audioRef.current.volume = 0.5;
-    },[messageSound])
 
     const base = "p-3 text-sm sm:max-w-lg max-w-[75%] flex justify-start items-center gap-2 text-wrap rounded-xl font-semibold";
     const position = isMe ? "rounded-tr-none bg-accent-blue text-white" : "rounded-tl-none bg-background text-white";
@@ -51,8 +48,23 @@ export default function MessageBubble({userId,text}:propType) {
         if (text.animated) return
 
         dispatch(messageAnimated(text.id))
-        if (text.type === "chat" ) audioRef.current?.play()
-        
+        if (text.type === "chat" ){
+            if (isMe){
+                playSound(messageSentAudio,0.4)
+            } 
+            else{
+                playSound(messageReceiptAudio,0.4)
+            }
+        }
+        else if (text.type==="wrong"){
+            playSound(wrongMessageAudio,1)
+        }
+        else if (text.type === "correct"){
+            playSound(correctMessageAudio,1)
+        }
+        else if (text.type === "answer"){
+            playSound(answerAudio,1)
+        }
         
         gsap.from(bubbleRef.current, {
             opacity: 0,

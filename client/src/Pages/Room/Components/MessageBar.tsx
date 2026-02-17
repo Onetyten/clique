@@ -8,7 +8,6 @@ import { socket } from '../../../util/socket'
 import { addMessage, type newMessageType } from '../../../store/messageSlice'
 import { toast } from 'react-toastify'
 import glitchSound from "/public/Audio/glitch.mp3"
-import gsap from 'gsap'
 
 interface propType{
     isAdmin:boolean
@@ -29,34 +28,9 @@ export default function MessageBar({isAdmin,setChatMode,chatMode,setShowMessageL
     const session = useSelector((state:RootState)=>state.session.session)
     const dispatch = useDispatch()
     const glitchAudioRef = useRef<HTMLAudioElement | null>(null)
-    const zapContainerRef = useRef<HTMLDivElement | null>(null);
-    const prevTriesRef = useRef(triesLeft);
-
-    useEffect(() => {
-        if (!zapContainerRef.current) return;
-
-        if (triesLeft < prevTriesRef.current) {
-            const zaps = zapContainerRef.current.children;
-            const removedZap = zaps[triesLeft]; // the one about to disappear
-
-            if (removedZap) {
-            gsap.to(removedZap, {
-                y: -30,
-                x: gsap.utils.random(-20, 20),
-                opacity: 0,
-                scale: 1.5,
-                rotation: gsap.utils.random(-180, 180),
-                duration: 0.4,
-                ease: "power2.out",
-            });
-            }
-        }
-        prevTriesRef.current = triesLeft;
-    }, [triesLeft]);
 
     useEffect(()=>{
         glitchAudioRef.current = new Audio(glitchSound)
-        // glitchAudioRef.current.volume = 0.5;
     },[])
 
     function chatMessage(){
@@ -110,8 +84,9 @@ export default function MessageBar({isAdmin,setChatMode,chatMode,setShowMessageL
         else{
             const newMessage:newMessageType = { ...messagePayload, type: "wrong" };
             dispatch(addMessage(newMessage));
-            toast.warn(`You have ${newTries} attempt${newTries>1?"s":""} `)
-            
+            if (newTries>0){
+                toast.warn(`You have ${newTries} attempt${newTries>1?"s":""} `)
+            } 
         }
     }
     
@@ -141,12 +116,8 @@ export default function MessageBar({isAdmin,setChatMode,chatMode,setShowMessageL
 
             {!isAdmin && session &&
 
-           <div ref={zapContainerRef} className="text-white items-center gap-2 flex cursor-pointer">
-                {Array.from({ length: triesLeft }).map((_, index) => (
-                    <span key={index} className="zap-item">
-                        <Zap size={18} />
-                    </span>
-                ))}
+            <div className="text-white items-center gap-2 flex cursor-pointer">
+                {Array.from({length:triesLeft}).map(()=><Zap size={18}/>)}
             </div>}
 
             {isAdmin && !session &&  
