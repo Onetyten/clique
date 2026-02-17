@@ -42,6 +42,7 @@ export interface messageType {
     timeStamp: number
     id:string
     type: "chat" | "question" | "correct" | "wrong" | "answer"
+    animated:boolean
 }
 
 export interface sessionType{

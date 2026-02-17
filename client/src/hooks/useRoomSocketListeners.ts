@@ -87,7 +87,6 @@ export default function useRoomSocketListeners(){
 
 
     useEffect(()=>{
-
         const validateToken = () => {
             const room = store.getState().room.room
             const user = store.getState().user.user
@@ -95,7 +94,7 @@ export default function useRoomSocketListeners(){
                 socket.emit("validateToken", { cliqueName: room.name, username: user.name, token: room.token})
             }
         }
-
+        
         validateToken()
         socket.on("reconnect", validateToken)
         
