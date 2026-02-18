@@ -84,6 +84,7 @@ const io = new Server(server,{
 
 const socketUserMap = new Map<string,{userId:string,roomId:string,isAdmin:boolean}>()
 const sessionTimeoutMap = new Map<string, {timeout: ReturnType<typeof setTimeout>, interval: ReturnType<typeof setInterval>}>()
+const graceTimeoutMap = new Map<string, ReturnType<typeof setTimeout>>()
 
 
 io.on("connection",async (socket:Socket)=>{
@@ -91,13 +92,13 @@ io.on("connection",async (socket:Socket)=>{
     // endExpiredSessionOnStart(socket)
 
     socket.on("CreateClique",(data)=>handleCreateClique(socket,data,socketUserMap))
-    socket.on("joinClique",(data)=>handleJoinClique(socket,data,socketUserMap))
+    socket.on("joinClique",(data)=>handleJoinClique(socket,data,socketUserMap,graceTimeoutMap))
     socket.on("rejoinClique",(data)=>handleRejoinClique(socket,data,socketUserMap))
     socket.on("validateToken",(data)=>handleValidateToken(socket,data,socketUserMap))
     socket.on("ChatMessage",(data)=>handleChatMessage(socket,data))
     socket.on("askQuestion",(data)=>handleAskQuestion(io,socket,data,sessionTimeoutMap))
     socket.on("questionAnswered",(data)=>handleQuestionAnswered(io,socket,data,sessionTimeoutMap))
-    socket.on("disconnect",async (reason)=>handleDisconnect(io,socket,reason,socketUserMap,))
+    socket.on("disconnect",async (reason)=>handleDisconnect(io,socket,reason,socketUserMap,graceTimeoutMap))
 })
 
 server.listen(port,()=>{

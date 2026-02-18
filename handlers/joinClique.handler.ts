@@ -16,7 +16,7 @@ interface InputType{
 }
 
 export async function handleJoinClique(socket:Socket,{cliqueKey,username,cliqueName}:InputType,socketUserMap:Map<string,{userId: string; roomId: string;
-isAdmin: boolean;}>){
+isAdmin: boolean;}>,graceTimeoutMap: Map<string, NodeJS.Timeout>){
         const secret = process.env.JWT_SECRET
         if (!secret){
             throw new Error(`No "JWT_SECRET" found in the .env file`)
@@ -53,7 +53,6 @@ isAdmin: boolean;}>){
             await client.query("BEGIN")
             const roomExists = await client.query('SELECT * FROM rooms WHERE name = $1',[cliqueName]);      
             if (roomExists.rows.length === 0){
-
                 await client.query("ROLLBACK")
                 logger.info(`User ${username} tried to join inexistant room ${cliqueName}`);
                 return socket.emit("Error", { message: "This clique does not exist" });
@@ -96,12 +95,19 @@ isAdmin: boolean;}>){
                     return socket.emit("Error", { message: `user ${name} already exists in this clique choose another name` })  
                 }
                 else{
+
                     newUser = nameExists.rows[0];
+                    const graceKey = `${newUser.id}:${roomId}`
+                    const pendingTimeout = graceTimeoutMap.get(graceKey)
+                    if (pendingTimeout) {
+                        clearTimeout(pendingTimeout)
+                        graceTimeoutMap.delete(graceKey)
+                        logger.info(`Cancelled grace timeout for rejoining user ${name}`)
+                    }
                     const gmExists = await client.query('SELECT id FROM members WHERE room_id = $1 AND role = $2 ',[roomId,adminId])
                     if (gmExists.rows.length === 0){
                         await client.query('UPDATE members SET role = $1 WHERE id = $2 AND NOT EXISTS (SELECT 1 FROM members WHERE room_id = $3 and role = $1 )',[adminId,newUser.id,roomId])
                     }
-
                 }
             }
 
