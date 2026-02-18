@@ -17,6 +17,7 @@ export async function handleAskQuestion(io:Server,socket: Socket, { user,questio
 
   const client = await pool.connect()
   try {
+      await client.query("BEGIN")
       const gameRoom = await client.query(`SELECT COUNT (*) FROM members WHERE room_id=$1`, [user.room_id])
       
       if (gameRoom.rows[0].count < 2 ){
@@ -64,8 +65,6 @@ export async function handleAskQuestion(io:Server,socket: Socket, { user,questio
         `UPDATE sessions SET is_active = false WHERE room_id = $1 AND id != $2`,
         [user.room_id,session.rows[0].id]
       );
-
-      logger.info(`new session created in room ${session.rows[0].room_id}`)
 
       await client.query("UPDATE members SET was_gm = true WHERE id =$1",[user.id])
 

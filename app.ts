@@ -94,7 +94,7 @@ io.on("connection",async (socket:Socket)=>{
     socket.on("ChatMessage",(data)=>handleChatMessage(socket,data))
     socket.on("askQuestion",(data)=>handleAskQuestion(io,socket,data,sessionTimeoutMap))
     socket.on("questionAnswered",(data)=>handleQuestionAnswered(io,socket,data,sessionTimeoutMap))
-    socket.on("disconnect",async (reason)=>handleDisconnect(socket,reason,socketUserMap,))
+    socket.on("disconnect",async (reason)=>handleDisconnect(io,socket,reason,socketUserMap,))
 })
 
 server.listen(port,()=>{

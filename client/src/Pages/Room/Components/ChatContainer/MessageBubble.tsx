@@ -6,11 +6,11 @@ import { useGSAP } from '@gsap/react'
 import { useRef } from 'react'
 import { useDispatch } from 'react-redux'
 import { messageAnimated } from '../../../../store/messageSlice'
-import messageSentAudio from "/public/Audio/message-sent.mp3"
-import messageReceiptAudio from "/public/Audio/message-received.mp3"
-import wrongMessageAudio from "/public/Audio/wrong-answer.mp3"
-import correctMessageAudio from "/public/Audio/correct-message.mp3"
-import answerAudio from "/public/Audio/answer-timeout.mp3"
+import messageSentAudio from "/Audio/message-sent.mp3"
+import messageReceiptAudio from "/Audio/message-received.mp3"
+import wrongMessageAudio from "/Audio/wrong-answer.mp3"
+import correctMessageAudio from "/Audio/correct-message.mp3"
+import answerAudio from "/Audio/answer-timeout.mp3"
 import { playSound } from '../../../../hooks/useRoomSocketListeners'
 
 

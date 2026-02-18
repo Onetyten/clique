@@ -6,16 +6,19 @@ import { useDispatch, useSelector } from "react-redux"
 import api from "../util/api"
 import type { userType } from "../types/types"
 import { toast } from "react-toastify"
-import { addMessage, type newMessageType } from "../store/messageSlice"
+import { addMessage, clearMessages, type newMessageType } from "../store/messageSlice"
 import { clearSession, setSession } from "../store/sessionSlice"
-import { setUser } from "../store/userSlice"
+import { clearUser, setUser } from "../store/userSlice"
 import store from "../util/store"
-import joinAudio from "/public/Audio/join.mp3"
-import clockTick from "/public/Audio/clock-ticking.mp3"
-import clockTickUrgent from "/public/Audio/clock-ticking-urgent.mp3"
-import Bell from "/public/Audio/school_bell.mp3"
-import pointObtainedAudio from "/public/Audio/points-obtained.mp3"
+import joinAudio from "/Audio/join.mp3"
+import clockTick from "/Audio/clock-ticking.mp3"
+import clockTickUrgent from "/Audio/clock-ticking-urgent.mp3"
+import Bell from "/Audio/school_bell.mp3"
+import pointObtainedAudio from "/Audio/points-obtained.mp3"
+import glitchSound from "/Audio/glitch.mp3"
 import confetti from "canvas-confetti";
+import { useNavigate } from "react-router"
+import { clearRoom } from "../store/roomSlice"
 
 
 
@@ -52,7 +55,10 @@ type FetchGuestsResponse = {
 
 
 export default function useRoomSocketListeners(){
+    const user = useSelector((state:RootState)=>state.user.user)
+    const room  = useSelector((state:RootState)=>state.room.room)
     const session  = useSelector((state:RootState)=>state.session.session)
+    const navigate = useNavigate()
     const [friendList,setFriendList] = useState<userType[]>([])
     const [questionLoading,setQuestionLoading] = useState(false)
     const [showBanner,setShowBanner] = useState(false)
@@ -61,7 +67,7 @@ export default function useRoomSocketListeners(){
     const TOTAL_TRIES = 3
     const [triesLeft,setTriesLeft]  = useState(TOTAL_TRIES)
     const [timeLeft,setTimeleft] = useState<number>(60)
-    const [bannerMessage,setBannerMessage] = useState(`${roundCount}`)
+    const [bannerMessage,setBannerMessage] = useState(`Round ${roundCount} - Let’s Go!`)
     const [showQuestionForm,setShowQuestionForm] = useState(false)
     const clockRef = useRef<HTMLAudioElement | null>(null);
     const urgentRef = useRef<HTMLAudioElement | null>(null);
@@ -91,6 +97,20 @@ export default function useRoomSocketListeners(){
             console.log('error fetching members',error)
         }
     }
+
+    useEffect(()=>{
+        if (!user || !room){
+            dispatch(clearUser())
+            dispatch(clearRoom())
+            dispatch(clearMessages())
+            toast.warn("Please, rejoin this room");
+            navigate(`/`)    
+            window.location.href = "/"
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    },[navigate, room])
+
+
     useEffect(() => {
         clockRef.current = new Audio(clockTick);
         urgentRef.current = new Audio(clockTickUrgent);
@@ -178,6 +198,8 @@ export default function useRoomSocketListeners(){
         return () => clearTimeout(timeout);
     }, [showBanner]);
 
+    
+
 
     useEffect(()=>{
         const validateToken = () => {
@@ -198,6 +220,15 @@ export default function useRoomSocketListeners(){
             getFriendList()
         }
         socket.on("userJoined", handleUserJoined)
+        socket.on("adminAssignment", handleUserJoined)
+
+        const handleUserLeft = (data: any) => {
+            playSound(glitchSound,1.0)
+            toast.info(data.message)
+            getFriendList()
+        }
+        socket.on("userLeft", handleUserLeft)
+        
 
         const handleMessageSent = (data: any) => {
             const newMessage: newMessageType = data
@@ -242,9 +273,6 @@ export default function useRoomSocketListeners(){
             if (data.correctUser.id === user?.id){
                 victoryConfetti()
             }
-            
-            
-
         }
 
         socket.on("answerCorrect", handleAnswerCorrect)
@@ -259,6 +287,8 @@ export default function useRoomSocketListeners(){
         return () => {
             socket.off("reconnect", validateToken)
             socket.off("userJoined", handleUserJoined)
+            socket.off("userLeft", handleUserLeft)
+            socket.off("adminAssignment", handleUserJoined)
             socket.off("messageSent", handleMessageSent)
             socket.off("questionError", handleQuestionError)
             socket.off("questionAsked", handleQuestionAsked)

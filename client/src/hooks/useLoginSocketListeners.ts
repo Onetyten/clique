@@ -6,6 +6,7 @@ import {useDispatch} from "react-redux"
 import { setUser } from "../store/userSlice"
 import { setRoom } from "../store/roomSlice"
 import { useNavigate } from "react-router"
+import { clearMessages } from "../store/messageSlice"
 
 
 export default function useLoginSocketListeners(setLoading:React.Dispatch<React.SetStateAction<boolean>>){
@@ -15,6 +16,7 @@ export default function useLoginSocketListeners(setLoading:React.Dispatch<React.
     function handleLogin(data:loginDataType){
         if (!data) return
         setLoading(false)
+        dispatch(clearMessages())
         dispatch(setUser(data.user))
         dispatch(setRoom(data.room))
         toast.success(data.message);

@@ -3,12 +3,17 @@ import { useEffect, useState } from "react"
 import { socket } from "../util/socket"
 import { toast } from "react-toastify"
 import { useNavigate } from "react-router"
+import { useDispatch } from "react-redux"
+import { clearUser } from "../store/userSlice"
+import { clearRoom } from "../store/roomSlice"
+import { clearMessages } from "../store/messageSlice"
 
 
 export default function useGlobalSocketListeners(){
     const [authLoading,setAuthLoading] = useState(false)
     const [loading,setLoading] = useState(false)
     const navigate = useNavigate()
+    const dispatch = useDispatch()
 
     useEffect(()=>{
         if (!socket.connected) socket.connect()
@@ -32,6 +37,9 @@ export default function useGlobalSocketListeners(){
 
         socket.on("Boot Out",(data)=>{
             toast.warn(data.message || "Please, rejoin this room");
+            dispatch(clearUser())
+            dispatch(clearRoom())
+            dispatch(clearMessages())
             // console.log("Booted out")
             setTimeout(() => {
                 navigate(`/`)

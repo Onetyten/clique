@@ -7,7 +7,7 @@ import type { RootState } from '../../../util/store'
 import { socket } from '../../../util/socket'
 import { addMessage, type newMessageType } from '../../../store/messageSlice'
 import { toast } from 'react-toastify'
-import glitchSound from "/public/Audio/glitch.mp3"
+import glitchSound from "/Audio/glitch.mp3"
 
 interface propType{
     isAdmin:boolean
