@@ -26,7 +26,7 @@ isAdmin: boolean;}>) {
             }
             const client = await pool.connect()
             try{
-                
+
                 const deleted = await client.query( `DELETE FROM members WHERE id = $1 AND room_id = $2 RETURNING name`, [userId, roomId])
                 if (deleted.rows.length>0){
                     io.to(roomId).emit("userLeft", {message: `${deleted.rows[0].name} left`}) 
@@ -67,6 +67,7 @@ isAdmin: boolean;}>) {
             const finalMemberCheck = [...socketUserMap.values()].filter(member=>member.roomId === roomId)
             if (finalMemberCheck.length === 0){
                 logger.info(`Scorched Earth! Cleaning up room ${roomId}`)
+                clearTimeout(graceTimeout)
                 await scorchedEarth(roomId)
             }
             else{

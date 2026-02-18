@@ -17,6 +17,7 @@ import { handleRejoinClique } from './handlers/rejoinClique.handler';
 import { handleValidateToken } from './handlers/handleValidateToken.handler';
 import { endExpiredSessionOnStart } from './services/session.service';
 import pinoCaller from 'pino-caller';
+import { startupCleanup } from './services/cleanup.service';
 
 
 const rootDir = path.basename(__dirname) === "dist"?path.join(__dirname,".."):__dirname
@@ -34,6 +35,8 @@ const baseLogger = pino({
 });
 
 export const logger = pinoCaller(baseLogger);
+
+startupCleanup()
 
 app.use(cors({origin:"*"}))
 app.use(express.json())
