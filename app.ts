@@ -92,7 +92,7 @@ io.on("connection",async (socket:Socket)=>{
     // endExpiredSessionOnStart(socket)
 
     socket.on("CreateClique",(data)=>handleCreateClique(socket,data,socketUserMap))
-    socket.on("joinClique",(data)=>handleJoinClique(socket,data,socketUserMap,graceTimeoutMap))
+    socket.on("joinClique",(data)=>handleJoinClique(io,socket,data,socketUserMap,graceTimeoutMap))
     socket.on("rejoinClique",(data)=>handleRejoinClique(socket,data,socketUserMap))
     socket.on("validateToken",(data)=>handleValidateToken(socket,data,socketUserMap))
     socket.on("ChatMessage",(data)=>handleChatMessage(socket,data))
