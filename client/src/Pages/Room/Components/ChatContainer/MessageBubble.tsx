@@ -10,7 +10,6 @@ import messageSentAudio from "/Audio/message-sent.mp3"
 import messageReceiptAudio from "/Audio/message-received.mp3"
 import wrongMessageAudio from "/Audio/wrong-answer.mp3"
 import correctMessageAudio from "/Audio/correct-message.mp3"
-import answerAudio from "/Audio/answer-timeout.mp3"
 import { playSound } from '../../../../hooks/useRoomSocketListeners'
 
 
@@ -63,7 +62,7 @@ export default function MessageBubble({userId,text}:propType) {
             playSound(correctMessageAudio,1)
         }
         else if (text.type === "answer"){
-            playSound(answerAudio,1)
+            playSound(correctMessageAudio,1)
         }
         
         gsap.from(bubbleRef.current, {
