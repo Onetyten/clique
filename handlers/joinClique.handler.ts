@@ -1,4 +1,4 @@
-import { Socket } from "socket.io";
+import { Server, Socket } from "socket.io";
 import pool from "../config/pgConnect";
 import userJoinSchema from "../validation/joinRoom.validation";
 import bcrypt from "bcrypt"
@@ -8,6 +8,7 @@ import { HexCodes } from "../config/hexCodes";
 import { assignNextAdmin } from "../services/admin.service";
 import { PoolClient } from "pg";
 import { logger } from "../app";
+import { startGraceTimer } from "../services/session.service";
 
 interface InputType{
     cliqueKey:string,
@@ -15,7 +16,7 @@ interface InputType{
     cliqueName:string;
 }
 
-export async function handleJoinClique(socket:Socket,{cliqueKey,username,cliqueName}:InputType,socketUserMap:Map<string,{userId: string; roomId: string;
+export async function handleJoinClique(io:Server,socket:Socket,{cliqueKey,username,cliqueName}:InputType,socketUserMap:Map<string,{userId: string; roomId: string;
 isAdmin: boolean;}>,graceTimeoutMap: Map<string, NodeJS.Timeout>){
         const secret = process.env.JWT_SECRET
         if (!secret){
@@ -34,19 +35,23 @@ isAdmin: boolean;}>,graceTimeoutMap: Map<string, NodeJS.Timeout>){
         
         
 
-        async function handleRoomSwitch(client:PoolClient, socket: Socket, existingUser: { userId: string; roomId: string; isAdmin: boolean },socketUserMap: Map<string, any>) {
+        async function handleRoomSwitch(client: PoolClient, socket: Socket, existingUser: { userId: string; roomId: string; isAdmin: boolean }, socketUserMap: Map<string, any>, newRoomId: string ) {
             const { userId, roomId, isAdmin } = existingUser
             socket.leave(roomId)
             let NewAdmin;
+
             if (isAdmin) {
-                NewAdmin = await assignNextAdmin(client,roomId,userId)
+                NewAdmin = await assignNextAdmin(client, roomId, userId)
             }
 
-            await client.query( `DELETE FROM members WHERE id = $1 AND room_id = $2`,[userId, roomId])
+            if (roomId !== newRoomId) {
+                startGraceTimer(io, userId, roomId, isAdmin, username, socketUserMap, graceTimeoutMap);
+            }
 
             socketUserMap.delete(socket.id)
-
-            socket.to(roomId).emit("userLeft", { message:`${username} has left the clique,${NewAdmin?`The new admin is ${NewAdmin.name}`:""}`})
+            socket.to(roomId).emit("userLeft", {
+                message: `${username} has left the clique,${NewAdmin ? ` The new admin is ${NewAdmin.name}` : ""}`
+            })
         }
 
         try {
@@ -63,15 +68,16 @@ isAdmin: boolean;}>,graceTimeoutMap: Map<string, NodeJS.Timeout>){
                 logger.info('Incorrect password');
                 return socket.emit("Error", { message: "Incorrect key" });
             }
+            const roomName = roomExists.rows[0].name;
+            const roomId = roomExists.rows[0].id;
 
             const existingUser = socketUserMap.get(socket.id)
             if (existingUser) {
-                await handleRoomSwitch(client,socket, existingUser, socketUserMap)
+                await handleRoomSwitch(client,socket, existingUser, socketUserMap,roomId)
             }
 
             let newUser;
-            const roomName = roomExists.rows[0].name;
-            const roomId = roomExists.rows[0].id;
+            
             const nameExists = await client.query('SELECT * FROM members WHERE name = $1 AND room_id = $2',[name,roomId]);
             const isSessionActive = await client.query('SELECT is_active,end_time FROM sessions WHERE room_id=$1 AND is_active IS true',[roomId])
 
@@ -105,8 +111,10 @@ isAdmin: boolean;}>,graceTimeoutMap: Map<string, NodeJS.Timeout>){
                         logger.info(`Cancelled grace timeout for rejoining user ${name}`)
                     }
                     const gmExists = await client.query('SELECT id FROM members WHERE room_id = $1 AND role = $2 ',[roomId,adminId])
-                    if (gmExists.rows.length === 0){
-                        await client.query('UPDATE members SET role = $1 WHERE id = $2 AND NOT EXISTS (SELECT 1 FROM members WHERE room_id = $3 and role = $1 )',[adminId,newUser.id,roomId])
+                    if (gmExists.rows.length === 0) {
+                        await client.query( 'UPDATE members SET role = $1 WHERE id = $2 RETURNING *',[adminId, newUser.id]);
+                        const refreshed = await client.query('SELECT * FROM members WHERE id = $1', [newUser.id]);
+                        newUser = refreshed.rows[0];
                     }
                 }
             }
@@ -114,7 +122,10 @@ isAdmin: boolean;}>,graceTimeoutMap: Map<string, NodeJS.Timeout>){
             else {
                 const colorIndex = (Math.floor(Math.random() * HexCodes.length))
                 const color = HexCodes[colorIndex]
-                const newUserResult = await client.query('INSERT INTO members (name, room_id, role, hex_code ) VALUES($1,$2,$3,$4) RETURNING *',[name,roomId,guestId,color]);
+                const gmExists = await client.query( 'SELECT id FROM members WHERE room_id = $1 AND role = $2', [roomId, adminId] )
+                const roleToAssign = gmExists.rows.length === 0 ? adminId : guestId;
+
+                const newUserResult = await client.query( 'INSERT INTO members (name, room_id, role, hex_code) VALUES($1,$2,$3,$4) RETURNING *', [name, roomId, roleToAssign, color] )
                 newUser = newUserResult.rows[0];
             }
 
@@ -128,7 +139,7 @@ isAdmin: boolean;}>,graceTimeoutMap: Map<string, NodeJS.Timeout>){
             socket.join(roomId.toString());
             socket.emit("JoinedClique", { message: `Successfully joined ${roomName} `, room:newRoom,user: clientUser});
 
-            socketUserMap.set(socket.id,{userId:newUser.id,roomId,isAdmin:newUser.role === 2})
+            socketUserMap.set(socket.id,{userId:newUser.id,roomId,isAdmin:newUser.role === adminId})
             return socket.to(roomId).emit("userJoined",{ message:`${username} has joined the room`,user:clientUser})
         }
         catch (error:any) {

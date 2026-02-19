@@ -138,6 +138,7 @@ export default function useRoomSocketListeners(){
 
 
     useEffect(()=>{
+        dispatch(clearMessages())
         getFriendList()
     // eslint-disable-next-line react-hooks/exhaustive-deps
     },[])
