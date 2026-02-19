@@ -8,8 +8,6 @@ export default function ChatContainer() {
     const user = useSelector((state:RootState)=>state.user.user)
     const chatContainerRef = useRef<HTMLDivElement | null >(null)
 
-    console.log(messages)
-
     useEffect(()=>{
         if (!chatContainerRef.current) return
         chatContainerRef.current.scrollTo({
