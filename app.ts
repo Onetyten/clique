@@ -41,22 +41,10 @@ startupCleanup()
 app.use(cors({origin:"*"}))
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
-app.use(express.static(path.join(rootDir,"public")))
 app.use(express.static(path.join(rootDir,"client","dist")))
-app.set("view engine","ejs")
-app.set("views",path.join(rootDir,"views"))
 
-app.get("/v1",(req,res)=>{
-    res.render("index")
-})
 
-app.get("/v1/room",(req:Request,res:Response)=>{
-    const roomIndex = req.query.index
-    if (!roomIndex){
-        return res.status(400).send("Room index is missing.")
-    }
-    res.render("room",{roomIndex:roomIndex})
-})
+
 
 app.use('/room',fetchGuestRoute)
 
