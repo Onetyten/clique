@@ -42,8 +42,7 @@ export default function useGlobalSocketListeners(){
             dispatch(clearMessages())
             // console.log("Booted out")
             setTimeout(() => {
-                navigate(`/`)
-                window.location.href = "/"
+                navigate(`/signin`)
             }, 1500);
         })
 

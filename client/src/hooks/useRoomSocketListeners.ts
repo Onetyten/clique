@@ -104,8 +104,7 @@ export default function useRoomSocketListeners(){
             dispatch(clearRoom())
             dispatch(clearMessages())
             toast.warn("Please, rejoin this room");
-            navigate(`/`)    
-            window.location.href = "/"
+            navigate("/signin")    
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     },[navigate, room])
