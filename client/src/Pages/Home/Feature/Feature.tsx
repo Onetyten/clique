@@ -1,12 +1,21 @@
+import { useEffect, useRef } from 'react';
 import { features } from '../../../data/data'
 import RevealCard from '../RevealCard'
+import Phone from "/output.webm"
 
 
 
 
 export default function Feature() {
+const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.playbackRate = 4.0;
+    }
+  }, []);
   return (
-    <section id='features' className="py-32 px-3 sm:px-16 text-left bg-background/80 backdrop-blur-[3px]">
+    <section id='features' className="pt-32 px-3 sm:px-16 text-left bg-background/80 backdrop-blur-[3px]">
         
         <p className="text-sm text-accent-blue w-full font-medium tracking-widest uppercase mb-3">Why Clique?</p>
     
@@ -28,6 +37,11 @@ export default function Feature() {
             </RevealCard>
             ))}
         </div>
+        <div className='w-full flex items-center mt-16 sm:mt-32 justify-center'>
+            <video ref={videoRef} src={Phone} autoPlay muted loop playsInline preload="auto" disablePictureInPicture className="w-[600px] max-w-[90vw]" />
+
+        </div>
+        
     </section>
   )
 }

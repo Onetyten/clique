@@ -21,7 +21,7 @@ export default function NotificationBubble({ text, dotColor, position }:propType
   },[])
 
   return (
-    <div ref={bubble} className={`bg-background z-10 p-2 px-4 border border-text-primary/50 rounded-full rounded-tl-0 flex items-center gap-3 absolute text-text-primary ${position}`} >
+    <div ref={bubble} className={`bg-background opacity-40 sm:opacity-100 z-10 p-2 px-4 border border-text-primary/50 rounded-full rounded-tl-0 flex items-center gap-3 absolute text-text-primary ${position}`} >
       <div className={`size-2 rounded-full ${dotColor}`} />
       {text}
     </div>

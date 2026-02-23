@@ -40,7 +40,7 @@ export default function Login() {
                     <Spinner size={30} />
                 </div>
             )}
-            <p className="text-2xl sm:text-5xl font-bold">Clique</p>
+            <p className="text-2xl sm:text-5xl font-syne font-bold">Clique</p>
             <p className=" ">Join a Clique or start your own</p>
 
             <input placeholder="Name" type="text" value={username} onChange={(e)=>setUserName(e.target.value)} className="bg-background-100 p-4 focus:outline-0 focus:border-2 rounded-sm border-text-muted placeholder:text-text-muted w-full sm:w-sm h-14" />
