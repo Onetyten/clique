@@ -7,13 +7,13 @@ export const floatingNotification = [
     id: 1,
     text: "Dami has joined the clique",
     dotColor: "bg-accent-blue",
-    position: "right-[4%] top-[25%]",
+    position: "-right-[4%] top-24 sm:top-[25%]",
   },
   {
     id: 2,
     text: "Mary answered incorrectly",
     dotColor: "bg-warning",
-    position: "left-[4%] top-[25%]",
+    position: "-left-4 sm:top-[25%] top-1/2",
   },
   {
     id: 3,
@@ -25,7 +25,7 @@ export const floatingNotification = [
     id: 4,
     text: "+10 points to Miguel",
     dotColor: "bg-accent-green",
-    position: "right-[15%] bottom-[25%]",
+    position: "-right-[15%] bottom-10  sm:bottom-[25%]",
   },
 ];
 
@@ -83,14 +83,14 @@ export const features:featureType[] = [
 ];
 
 export const steps = [
-  { num: "01", title: "Create or Join",  desc: "Spin up a room and invite your squad with a single link. No account required to join." },
+  { num: "01", title: "Create or Join",  desc: "Spin up a room and invite your squad with a single key. No account required to join." },
   { num: "02", title: "Answer & Guess",  desc: "Each round you answer about yourself, then guess what your friends said. Points for accuracy." },
   { num: "03", title: "Chat & Repeat",   desc: "React, roast, and repeat. Keep the banter going between rounds with real-time group chat." },
 ];
 
 export const socialChips = [
-  { label: "⭐", stat: "4.9", text: "App Store rating" },
-  { label: "👥", stat: "50k+", text: "players this month" },
-  { label: "🎮", stat: "2M+", text: "rounds played" },
-  { label: "💬", stat: "Free", text: "to play" },
+  {  stat: "4.9", text: "App Store rating" },
+  {  stat: "50k+", text: "players this month" },
+  {  stat: "2M+", text: "rounds played" },
+  {  stat: "Free", text: "to play" },
 ];

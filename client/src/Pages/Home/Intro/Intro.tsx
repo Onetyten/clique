@@ -3,11 +3,9 @@ import { BsAndroid2, BsGlobe } from 'react-icons/bs'
 export default function Intro() {
   return (
     
-    <section className="max-w-6xl min-h-screen  flex flex-col justify-center items-center gap-12">
-        
-        <div className="text-white text-7xl flex flex-col justify-center items-center gap-4 font-syne font-extrabold uppercase">
-            <p>Play. Guess.</p>
-            <p className="text-accent-green">Bond.</p>      
+    <section className="w-full min-h-screen max-w-screen bg-background/70 flex flex-col justify-center items-center gap-12 px-4">
+        <div className="text-white text-5xl  break-normal sm:text-6xl md:text-7xl flex flex-col justify-center items-center gap-4 font-syne font-extrabold uppercase">
+            <p className='leading-[70px] text-center'>Play. Guess. <br/><span className="text-accent-green">Bond.</span>   </p>
         </div>
 
         <div className="max-w-lg text-text-primary text-lg">
@@ -16,15 +14,15 @@ export default function Intro() {
             </p>
         </div>
 
-        <div className="flex font-semibold justify-center items-center gap-6">
-            <button className="text-center gap-2.5 flex justify-center items-center hover:shadow-lg transition-all duration-200 shadow-accent-green/40 w-72 cursor-pointer min-h-14 text-background rounded-xl bg-accent-green">
+        <div className="flex flex-col sm:flex-row font-semibold justify-center items-center gap-6">
+            <a href='https://github.com/Onetyten/Clique-Mobile/releases/download/v1.0/Clique-v1.0.0-android.apk' className="text-center gap-2.5 flex justify-center items-center hover:shadow-lg transition-all duration-200 shadow-accent-green/40 w-72 p-6 sm:p-0 cursor-pointer sm:min-h-14 max-w-[90vw]  text-background rounded-xl bg-accent-green">
                 <BsAndroid2 size={22}/>
                 Download Android App
-            </button>
-            <button className="text-center gap-2.5 flex justify-center items-center hover:shadow-lg transition-all duration-200 shadow-accent-blue/40 w-72 cursor-pointer min-h-14 text-white rounded-xl bg-accent-blue">
+            </a>
+            <a href='/signin' className="text-center gap-2.5 flex justify-center items-center hover:shadow-lg transition-all duration-200 shadow-accent-blue/40 w-72 max-w-[90vw] p-6 sm:p-0 cursor-pointer sm:min-h-14 text-white rounded-xl bg-accent-blue">
                 <BsGlobe size={22}/>
                 Play on web
-            </button>
+            </a>
         </div>
     </section>
   )
