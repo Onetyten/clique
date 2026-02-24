@@ -3,6 +3,7 @@ dotenv.config()
 import express, { Request, Response } from "express";
 import cors from 'cors'
 import path from 'path'
+import rateLimit from "express-rate-limit"
 import http from 'http'
 import pino from 'pino';
 import { Server, Socket } from 'socket.io';
@@ -15,10 +16,10 @@ import { handleQuestionAnswered } from './handlers/questionAnswered.handler';
 import { handleDisconnect } from './handlers/disconnectHandler';
 import { handleRejoinClique } from './handlers/rejoinClique.handler';
 import { handleValidateToken } from './handlers/handleValidateToken.handler';
-import { endExpiredSessionOnStart } from './services/session.service';
 import pinoCaller from 'pino-caller';
 import { startupCleanup } from './services/cleanup.service';
 
+const allowedOrigins = [ "http://localhost:5173","https://clique-1.onrender.com"]
 
 const rootDir = path.basename(__dirname) === "dist"?path.join(__dirname,".."):__dirname
 const app = express()
@@ -34,11 +35,24 @@ const baseLogger = pino({
   }
 });
 
+const limiter = rateLimit({
+    windowMs: 5 * 60 * 100,
+    max:100
+})
+
 export const logger = pinoCaller(baseLogger);
 
 startupCleanup()
 
-app.use(cors({origin:"*"}))
+app.use(cors({origin:(origin,callback)=>{
+        if (!origin) return callback(null,true)
+        if (allowedOrigins.includes(origin)) return callback(null,true)
+        callback(new Error("Not Allowed by CORS"))
+    },
+    credentials:true
+
+}))
+
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
 app.use(express.static(path.join(rootDir,"client","dist")))
@@ -46,7 +60,7 @@ app.use(express.static(path.join(rootDir,"client","dist")))
 
 
 
-app.use('/room',fetchGuestRoute)
+app.use('/room',limiter,fetchGuestRoute)
 
 
 app.get(/.*/,(req:Request,res:Response)=>{
@@ -60,8 +74,13 @@ const port = process.env.PORT
 const server = http.createServer(app)
 
 const io = new Server(server,{
-    cors:{
-        origin:"*"
+    cors: { 
+        origin:(origin,callback)=>{
+            if (!origin) return callback(null,true)
+            if (allowedOrigins.includes(origin)) return callback(null,true)
+            callback(new Error("Not Allowed by CORS"))
+        },
+        credentials:true
     },
     pingTimeout:60000,
     pingInterval:25000,
@@ -77,8 +96,6 @@ const graceTimeoutMap = new Map<string, ReturnType<typeof setTimeout>>()
 
 io.on("connection",async (socket:Socket)=>{
     logger.info({socketId:socket.id},"A user connected")
-    // endExpiredSessionOnStart(socket)
-
     socket.on("CreateClique",(data)=>handleCreateClique(socket,data,socketUserMap))
     socket.on("joinClique",(data)=>handleJoinClique(io,socket,data,socketUserMap,graceTimeoutMap))
     socket.on("rejoinClique",(data)=>handleRejoinClique(socket,data,socketUserMap))
