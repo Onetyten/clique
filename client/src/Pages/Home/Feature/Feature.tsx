@@ -1,4 +1,3 @@
-import { useEffect, useRef } from 'react';
 import { features } from '../../../data/data'
 import RevealCard from '../RevealCard'
 import Phone from "/output.webm"
@@ -7,13 +6,7 @@ import Phone from "/output.webm"
 
 
 export default function Feature() {
-const videoRef = useRef<HTMLVideoElement | null>(null);
 
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.playbackRate = 4.0;
-    }
-  }, []);
   return (
     <section id='features' className="pt-32 px-3 sm:px-16 text-left bg-background/80 backdrop-blur-[3px]">
         
@@ -38,7 +31,9 @@ const videoRef = useRef<HTMLVideoElement | null>(null);
             ))}
         </div>
         <div className='w-full flex items-center mt-16 sm:mt-32 justify-center'>
-            <video ref={videoRef} src={Phone} autoPlay muted loop playsInline preload="auto" disablePictureInPicture className="w-[600px] max-w-[90vw]" />
+            <video autoPlay={false} muted loop playsInline disablePictureInPicture preload="auto" onCanPlayThrough={(e) => e.currentTarget.play()} className="w-[600px] max-w-[90vw]" >
+              <source src={Phone} type="video/webm" />
+            </video>
 
         </div>
         
