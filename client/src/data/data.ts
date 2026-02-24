@@ -41,42 +41,42 @@ export const features:featureType[] = [
     {
         icon: Headset, 
         color: "bg-accent-blue/70",
-        shadow: "shadow-accent-blue/20",
+        shadow: "shadow-accent-blue",
         title: "Guessing Games",
         desc: "Competitive rounds of social trivia and personality guessing. Who knows who best? Find out fast."
     },
     {
         icon: MessageCircle, 
         color: "bg-accent-green/70",
-        shadow: "shadow-accent-green/20",
+        shadow: "shadow-accent-green",
         title: "Real-Time Chat",
         desc: "Talk trash, celebrate wins, and plan the next round — all in one place. No switching apps."
     },
     {
         icon: Zap, 
         color: "bg-warning/40",
-        shadow: "shadow-warning/20",
+        shadow: "shadow-warning",
         title: "Instant Notifications",
         desc: "Never miss your turn. Smart alerts keep the game moving so the energy never drops."
     },
     {
         icon: Flame,
-        shadow: "shadow-error/20",
-        color: "bg-error/40",
+        shadow: "shadow-error/40",
+        color: "bg-error",
         title: "Streaks & Rankings",
         desc: "Track your win streaks, climb the squad leaderboard, and unlock badges that actually mean something."
     },
     {
         icon: EvCharger, 
         color: "bg-text-primary/40",
-        shadow: "shadow-text-primary/20",
+        shadow: "shadow-text-primary",
         title: "Optimized Gameplay",
         desc: "Smooth, lag-free experience whether you're on mobile or web. Built to keep you in the flow."
     },
     {
         icon: Brain, 
         color: "bg-accent-green/70",
-        shadow: "shadow-accent-green/20",
+        shadow: "shadow-accent-green",
         title: "Know Each Other",
         desc: "Questions that go deeper than small talk. Clique helps you actually learn who your friends are."
     },
