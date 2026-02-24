@@ -17,12 +17,12 @@ export default function CTA() {
                   Download Clique for free or jump straight into the web version.
                 </p>
 
-                <div className="flex flex-col sm:flex-row font-semibold justify-center items-center gap-6">
-                    <a href='https://github.com/Onetyten/Clique-Mobile/releases/download/v1.0/Clique-v1.0.0-android.apk' className="text-center gap-2.5 flex justify-center items-center hover:shadow-lg transition-all duration-200 shadow-accent-green/40 w-72 p-6 sm:p-0 cursor-pointer sm:min-h-14 max-w-[80vw]  text-background rounded-xl bg-accent-green">
+                <div className="flex flex-col sm:flex-row font-semibold justify-center items-center gap-3 xs:gap-6">
+                    <a href='https://github.com/Onetyten/Clique-Mobile/releases/download/v1.0/Clique-v1.0.0-android.apk' className="text-center gap-2.5 flex justify-center items-center hover:shadow-lg transition-all duration-200 shadow-accent-green/40 w-72 p-5 xs:p-6 sm:p-0 cursor-pointer sm:min-h-14 max-w-[80vw]  text-background rounded-xl bg-accent-green">
                         <BsAndroid2 size={22}/>
                         Download Android App
                     </a>
-                    <a href='/signin' className="text-center gap-2.5 flex justify-center items-center hover:shadow-lg transition-all duration-200 shadow-accent-blue/40 w-72 max-w-[80vw] p-6 sm:p-0 cursor-pointer sm:min-h-14 text-white rounded-xl bg-accent-blue">
+                    <a href='/signin' className="text-center gap-2.5 flex justify-center items-center hover:shadow-lg transition-all duration-200 shadow-accent-blue/40 w-72 max-w-[80vw] p-5 xs:p-6 sm:p-0 cursor-pointer sm:min-h-14 text-white rounded-xl bg-accent-blue">
                         <BsGlobe size={22}/>
                         Play on web
                     </a>

@@ -34,14 +34,14 @@ export default function Login() {
   return (
     <div className="bg-background-100 min-h-dvh flex justify-center items-center">
 
-        <div className="p-4 sm:p-8 text-xs relative sm:text-sm w-10/12 md:w-xl bg-background text-text-primary rounded-sm flex flex-col items-center gap-3">
+        <div className="p-4 sm:p-8 text-sm relative sm:text-base w-10/12 md:w-xl bg-background text-text-primary rounded-sm flex flex-col items-center gap-3">
             {loading && (
                 <div className="absolute w-full inset-0 flex justify-center items-center h-full bg-background/80">
                     <Spinner size={30} />
                 </div>
             )}
-            <p className="text-2xl sm:text-5xl font-syne font-bold">Clique</p>
-            <p className=" ">Join a Clique or start your own</p>
+            <p className="text-4xl sm:text-5xl font-syne font-bold">Clique</p>
+            <p className="text-base">Join a Clique or start your own</p>
 
             <input placeholder="Name" type="text" value={username} onChange={(e)=>setUserName(e.target.value)} className="bg-background-100 p-4 focus:outline-0 focus:border-2 rounded-sm border-text-muted placeholder:text-text-muted w-full sm:w-sm h-14" />
 

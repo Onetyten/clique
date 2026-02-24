@@ -36,6 +36,7 @@
 }
 
 @theme inline {
+  --breakpoint-xs:475px;
   --font-poppins: "Poppins", sans-serif;
   --font-syne: "Syne", sans-serif;
   --color-background: #23272A;
